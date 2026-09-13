@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The House — House of Terrain</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Sans:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { background: #FFFFFF; color: #1A1714; font-family: 'DM Sans', sans-serif; font-weight: 300; }
+
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 2rem 3rem;
+    background: transparent;
+    transition: transform 0.4s ease;
+  }
+  nav.nav-hidden { transform: translateY(-100%); }
+  .nav-mark { font-family: 'Cormorant Garamond', serif; font-size: 0.95rem; letter-spacing: 0.25em; color: #F2EDE6; font-weight: 300; text-decoration: none; }
+  .nav-links { display: flex; gap: 2.5rem; align-items: center; }
+  .nav-links a { font-size: 0.68rem; color: rgba(242,237,230,0.55); letter-spacing: 0.14em; text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover, .nav-links a.active { color: #F2EDE6; }
+  .nav-burger { display: none; flex-direction: column; gap: 5px; cursor: pointer; background: none; border: none; padding: 0.4rem; }
+  .nav-burger span { width: 20px; height: 1px; background: #F2EDE6; display: block; transition: transform 0.3s ease, opacity 0.3s ease; }
+  .nav-burger.open span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+  .nav-burger.open span:nth-child(2) { opacity: 0; }
+  .nav-burger.open span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+  @media (max-width: 700px) {
+    .nav-links { display: none; position: fixed; inset: 0; background: #FFFFFF; flex-direction: column; justify-content: center; align-items: center; gap: 2.2rem; z-index: 49; }
+    .nav-links.open { display: flex; }
+    .nav-links a { font-size: 1rem; color: #1A1714; }
+    .nav-burger { display: flex; z-index: 51; }
+  }
+
+  .page-content { padding-top: 0; }
+
+  /* OPENING — full width, slow */
+  .opening {
+    padding: 6rem 3rem 5rem;
+    max-width: 780px;
+  }
+  .opening-label { font-size: 0.6rem; color: #A09288; letter-spacing: 0.22em; display: block; margin-bottom: 3rem; }
+  .opening-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2.4rem, 5vw, 4rem);
+    font-weight: 300;
+    line-height: 1.1;
+    color: #1A1714;
+    margin-bottom: 3rem;
+  }
+  .opening-title em { font-style: italic; color: #7A3020; }
+  .opening-body {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.25rem;
+    font-weight: 300;
+    line-height: 1.7;
+    color: #5A5248;
+    max-width: 58ch;
+  }
+
+  /* FOUNDER — two column */
+  .founder-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .founder-image {
+    background: #EFEFEF;
+    min-height: 560px;
+    position: relative;
+    overflow: hidden;
+  }
+  .founder-image-placeholder {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .founder-image-placeholder svg { opacity: 0.15; width: 80px; }
+  .founder-text {
+    padding: 5rem 4rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .founder-label { font-size: 0.6rem; color: #A09288; letter-spacing: 0.22em; display: block; margin-bottom: 2.5rem; }
+  .founder-name-display {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2rem;
+    font-weight: 300;
+    color: #1A1714;
+    margin-bottom: 0.3rem;
+  }
+  .founder-title { font-size: 0.72rem; color: #A09288; margin-bottom: 3rem; }
+  .founder-prose { font-size: 0.88rem; color: #5A5248; line-height: 2; }
+  .founder-prose p + p { margin-top: 1.5rem; }
+  .founder-prose em {
+    font-style: italic;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1rem;
+    color: #1A1714;
+  }
+
+  /* PHILOSOPHY — alternating text blocks */
+  .philosophy { padding: 6rem 3rem; }
+  .philosophy-label { font-size: 0.6rem; color: #A09288; letter-spacing: 0.22em; display: block; margin-bottom: 4rem; }
+  .philosophy-blocks { display: flex; flex-direction: column; gap: 0; }
+  .philosophy-block {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6rem;
+    padding: 3.5rem 0;
+    border-top: 0.5px solid #DDD6CC;
+    align-items: start;
+  }
+  .philosophy-block:last-child { border-bottom: 0.5px solid #DDD6CC; }
+  .phil-left { }
+  .phil-number { font-size: 0.6rem; color: #C4BAB0; letter-spacing: 0.1em; display: block; margin-bottom: 1rem; }
+  .phil-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.6rem;
+    font-weight: 300;
+    color: #1A1714;
+    line-height: 1.25;
+  }
+  .phil-title em { font-style: italic; color: #7A3020; }
+  .phil-right { }
+  .phil-body { font-size: 0.85rem; color: #6B6055; line-height: 1.95; padding-top: 0.4rem; }
+
+  /* ARCHIVE NUMBERS */
+  .archive-numbers {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border-top: 0.5px solid #C4BAB0;
+    border-bottom: 0.5px solid #C4BAB0;
+  }
+  .archive-number {
+    padding: 3.5rem 3rem;
+    border-right: 0.5px solid #C4BAB0;
+  }
+  .archive-number:last-child { border-right: none; }
+  .archive-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 3rem;
+    font-weight: 300;
+    color: #1A1714;
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+  .archive-num-label { font-size: 0.68rem; color: #A09288; line-height: 1.6; }
+
+  /* PAGE HERO */
+  .page-hero {
+    width: 100%;
+    height: 65vh;
+    min-height: 440px;
+    background: #1E1509;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-end;
+  }
+  .page-hero-visual { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .page-hero-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(to top, rgba(20,12,4,0.85) 0%, rgba(20,12,4,0.3) 60%, rgba(20,12,4,0.1) 100%);
+  }
+  .page-hero-content { position: relative; z-index: 2; padding: 3rem; }
+  .page-hero-label { font-size: 0.6rem; color: rgba(242,237,230,0.4); letter-spacing: 0.25em; display: block; margin-bottom: 1rem; }
+  .page-hero-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2rem, 5vw, 3.8rem);
+    font-weight: 300;
+    color: #F2EDE6;
+    line-height: 1.1;
+  }
+  .page-hero-title em { font-style: italic; color: rgba(242,237,230,0.55); }
+
+  /* OPENING WITH ILLUSTRATION */
+  .opening-with-visual {
+    display: grid;
+    grid-template-columns: 1fr 420px;
+    gap: 0;
+    align-items: stretch;
+  }
+  .opening-text { padding: 6rem 3rem; }
+  .opening-visual {
+    background: #EFEFEF;
+    border-left: 0.5px solid #C4BAB0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    min-height: 480px;
+  }
+  .opening-visual svg { width: 100%; max-width: 280px; opacity: 0.7; }
+
+  /* SAVOIR FAIRE */
+  .savoir-faire { padding: 6rem 3rem; border-bottom: 0.5px solid #C4BAB0; }
+  .sf-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 6rem; }
+  .sf-left { }
+  .sf-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.8rem;
+    font-weight: 300;
+    line-height: 1.3;
+    color: #1A1714;
+    margin-top: 2rem;
+  }
+  .sf-title em { font-style: italic; color: #7A3020; }
+  .sf-manifesto {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1rem;
+    font-weight: 300;
+    font-style: italic;
+    color: #6B6055;
+    line-height: 1.7;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 0.5px solid #C4BAB0;
+  }
+  .sf-right { display: flex; flex-direction: column; gap: 0; }
+  .sf-item { padding: 1.4rem 0; border-bottom: 0.5px solid #DDD6CC; }
+  .sf-item:first-child { border-top: 0.5px solid #DDD6CC; }
+  .sf-item-title { font-size: 0.78rem; font-weight: 400; color: #1A1714; margin-bottom: 0.4rem; letter-spacing: 0.04em; }
+  .sf-item-body { font-size: 0.8rem; color: #6B6055; line-height: 1.8; }
+
+  /* CLOSING QUOTE */
+  .closing-quote { padding: 7rem 3rem; border-bottom: 0.5px solid #C4BAB0; }
+  .closing-quote blockquote { font-family: 'Cormorant Garamond', serif; font-size: clamp(1.6rem, 3.5vw, 2.6rem); font-weight: 300; font-style: italic; line-height: 1.45; color: #1A1714; max-width: 56ch; border-left: 1px solid #8B3A2A; padding-left: 2rem; }
+  .closing-attribution { font-size: 0.68rem; color: #A09288; letter-spacing: 0.1em; margin-top: 1.5rem; padding-left: 2rem; }
+
+  footer { padding: 2rem 3rem; display: flex; justify-content: space-between; align-items: baseline; }
+  .footer-mark { font-family: 'Cormorant Garamond', serif; font-size: 0.85rem; letter-spacing: 0.2em; color: #A09288; }
+  .footer-note { font-size: 0.62rem; color: #B8AFA6; }
+
+  @media (max-width: 900px) {
+    .page-hero { height: 50vh; }
+    .page-hero-content { padding: 2rem 1.5rem; }
+    .opening-with-visual { grid-template-columns: 1fr; }
+    .opening-visual { display: none; }
+    .opening-text { padding: 4rem 1.5rem; }
+    .founder-section { grid-template-columns: 1fr; }
+    .founder-image { min-height: 300px; }
+    .founder-text { padding: 3rem 1.5rem; }
+    .philosophy { padding: 4rem 1.5rem; }
+    .philosophy-block { grid-template-columns: 1fr; gap: 1.5rem; }
+    .archive-numbers { grid-template-columns: repeat(2, 1fr); }
+    .sf-grid { grid-template-columns: 1fr; gap: 3rem; }
+    .savoir-faire { padding: 4rem 1.5rem; }
+    .closing-quote { padding: 5rem 1.5rem; }
+    footer { padding: 1.5rem; flex-direction: column; gap: 0.5rem; }
+  }
+  @keyframes phPulse { 0%, 100% { opacity: 0.15; } 50% { opacity: 0.34; } }
+  .founder-image-placeholder svg, .opening-visual svg { animation: phPulse 3.4s ease-in-out infinite; }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-mark">HOUSE OF TERRAIN</a>
+  <div class="nav-links">
+    <a href="about.html" class="active">The House</a>
+    <a href="terrain-index.html">Archive</a>
+    <a href="collections.html">Collections</a>
+  </div>
+  <button class="nav-burger" aria-label="Menu"><span></span><span></span><span></span></button>
+</nav>
+
+<div class="page-content">
+
+  <!-- HERO -->
+  <div class="page-hero">
+    <svg class="page-hero-visual" viewBox="0 0 1440 600" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="hg1" cx="55%" cy="45%" r="60%">
+          <stop offset="0%" stop-color="#5C3A14"/>
+          <stop offset="50%" stop-color="#2A1608"/>
+          <stop offset="100%" stop-color="#0E0700"/>
+        </radialGradient>
+      </defs>
+      <rect width="1440" height="600" fill="url(#hg1)"/>
+      <g opacity="0.07" stroke="#D4A070" stroke-width="0.5" fill="none">
+        <path d="M0,350 Q200,320 400,340 Q600,360 800,330 Q1000,300 1200,325 Q1350,340 1440,315"/>
+        <path d="M0,390 Q250,362 450,378 Q650,394 850,366 Q1050,338 1250,360 Q1380,372 1440,350"/>
+        <path d="M0,430 Q300,404 500,418 Q700,432 900,406 Q1100,380 1300,402 Q1400,412 1440,395"/>
+      </g>
+      <g opacity="0.08" fill="#D4A070">
+        <circle cx="280" cy="180" r="1.2"/><circle cx="520" cy="140" r="0.8"/><circle cx="780" cy="200" r="1.5"/><circle cx="1020" cy="160" r="1"/><circle cx="1200" cy="220" r="0.8"/>
+      </g>
+    </svg>
+    <div class="page-hero-overlay"></div>
+    <div class="page-hero-content">
+      <span class="page-hero-label">HOUSE OF TERRAIN · THE HOUSE</span>
+      <h1 class="page-hero-title">Built from the ground.<br><em>Intended to last.</em></h1>
+    </div>
+  </div>
+
+  <!-- OPENING WITH NOSE ILLUSTRATION -->
+  <div class="opening-with-visual">
+    <div class="opening-text">
+      <span class="opening-label">THE HOUSE</span>
+      <h2 class="opening-title">A house is built<br>on what it <em>refuses</em><br>to do without.</h2>
+      <p class="opening-body">House of Terrain was founded on a single principle: that certain materials — rare, specific, irreplaceable — deserve the same rigour, the same care, and the same permanence that the great houses of perfumery have given to their own terrain. The archive is the foundation. Everything else is built on top of it.</p>
+    </div>
+    <div class="opening-visual" style="flex-direction: column; gap: 1rem;">
+      <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" style="width: 60px; max-width: 60px; opacity: 0.25;"><rect x="2" y="2" width="32" height="32" rx="1" stroke="#1A1714" stroke-width="0.8"/><circle cx="12" cy="14" r="4" stroke="#1A1714" stroke-width="0.7"/><path d="M2 26 L10 18 L18 24 L26 16 L34 22" stroke="#1A1714" stroke-width="0.7" fill="none"/></svg>
+      <span style="font-size: 0.6rem; color: #8A8078; letter-spacing: 0.15em;">PHOTOGRAPH PENDING</span>
+    </div>
+  </div>
+
+  <!-- FOUNDER -->
+  <div class="founder-section">
+    <div class="founder-image">
+      <div class="founder-image-placeholder">
+        <svg viewBox="0 0 80 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="40" cy="32" rx="16" ry="18" stroke="#1A1714" stroke-width="0.8"/>
+          <path d="M12 90 Q12 62 40 62 Q68 62 68 90" stroke="#1A1714" stroke-width="0.8" fill="none"/>
+        </svg>
+      </div>
+    </div>
+    <div class="founder-text">
+      <span class="founder-label">THE FOUNDER</span>
+      <p class="founder-name-display">Ola</p>
+      <p class="founder-title">Founder · London</p>
+      <div class="founder-prose">
+        <p>There is a quality of attention that precedes a house. It is not urgency. It is not a concept or a brief. It is a sustained, almost unreasonable interest in materials — in what they are, where they come from, and what they will yield to someone patient enough to ask.</p>
+        <p>I have been in the presence of materials specific to locations that cannot be replicated. Their character is unmistakable. Their history is precise. And the rigour they demand — <em>the same rigour Grasse gave to roses, that Mysore gave to sandalwood</em> — is what House of Terrain exists to provide.</p>
+        <p>The archive came first. The house follows the archive. That is the only sequence that produces something lasting.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ARCHIVE NUMBERS -->
+  <div class="archive-numbers">
+    <div class="archive-number"><span class="archive-num">16</span><span class="archive-num-label">Materials secured<br>and documented</span></div>
+    <div class="archive-number"><span class="archive-num">4</span><span class="archive-num-label">Accords in<br>development</span></div>
+    <div class="archive-number"><span class="archive-num">100</span><span class="archive-num-label">Materials in the<br>full research set</span></div>
+    <div class="archive-number"><span class="archive-num">01</span><span class="archive-num-label">Drop · London<br>December 2026</span></div>
+  </div>
+
+  <!-- PHILOSOPHY -->
+  <div class="philosophy">
+    <span class="philosophy-label">THE PRINCIPLES</span>
+    <div class="philosophy-blocks">
+      <div class="philosophy-block">
+        <div class="phil-left"><span class="phil-number">I</span><h2 class="phil-title">The archive<br>before the <em>bottle.</em></h2></div>
+        <div class="phil-right"><p class="phil-body">Every material House of Terrain works with is documented before it is composed. The smell note comes before the accord. The accord comes before the fragrance. The fragrance comes before the bottle. This sequence is not caution. It is the only methodology that produces something irreplaceable.</p></div>
+      </div>
+      <div class="philosophy-block">
+        <div class="phil-left"><span class="phil-number">II</span><h2 class="phil-title">Terrain as<br><em>signature.</em></h2></div>
+        <div class="phil-right"><p class="phil-body">The materials that define a great fragrance house are not chosen for their familiarity. They are chosen because they are unrepeatable — because the terrain that produces them cannot be moved, synthesised, or substituted without loss of character. House of Terrain builds around this principle absolutely.</p></div>
+      </div>
+      <div class="philosophy-block">
+        <div class="phil-left"><span class="phil-number">III</span><h2 class="phil-title">Unhurried<br>by <em>design.</em></h2></div>
+        <div class="phil-right"><p class="phil-body">House of Terrain follows its own rhythm, far from market trends and imposed timelines — just as a fragrance evolves on the skin: naturally, freely. Drop 01 will be released when the accords are complete. The founding archive is kept private until it is ready to stand alone. This is the condition under which serious work is possible.</p></div>
+      </div>
+      <div class="philosophy-block">
+        <div class="phil-left"><span class="phil-number">IV</span><h2 class="phil-title">One house.<br>One <em>location at a time.</em></h2></div>
+        <div class="phil-right"><p class="phil-body">Distribution follows proof. London first. Then nothing until that is established completely. House of Terrain will expand only when the invitation is right — never when the ambition is impatient. We seek the perfect location, always. No compromise.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SAVOIR FAIRE — Henry Jacques register -->
+  <div class="savoir-faire">
+    <div class="sf-grid">
+      <div class="sf-left">
+        <span class="philosophy-label">SAVOIR FAIRE</span>
+        <h2 class="sf-title">The craft<br>behind the <em>archive.</em></h2>
+        <p class="sf-manifesto">Ancestral methods of extraction are used to honour and preserve the richness of each raw material — allowing it to reveal its full potential. No unnecessary dilution. No synthetic substitution. The human touch brings each fragrance to life.</p>
+      </div>
+      <div class="sf-right">
+        <div class="sf-item">
+          <p class="sf-item-title">Field documentation</p>
+          <p class="sf-item-body">Every material is encountered and documented before it enters the laboratory. Smell notes are written in the field — first contact, warmed, memory — in the present tense, on the day of encounter. The perfumer is an artisan of nuance, skilled in capturing nature's secrets and extracting their quintessence. The note is the first permanent record of the material's character.</p>
+        </div>
+        <div class="sf-item">
+          <p class="sf-item-title">Hand composition</p>
+          <p class="sf-item-body">Each accord is built entirely by hand. One precision balance, one magnetic stirrer, one nose. Maceration periods of three to six weeks allow resinous materials — benzoin, labdanum, myrrh, vetiver — to interact, evolve, and harmonise until they reach their natural balance. The perfumer's intuition and imagination elevate the accord to a true work. Nothing is rushed toward a product before it is ready to become one.</p>
+        </div>
+        <div class="sf-item">
+          <p class="sf-item-title">The living accord</p>
+          <p class="sf-item-body">House of Terrain honours the living by allowing natural molecules to take on a life of their own. A fragrance is not fixed at the moment of composition — it continues to develop, to deepen, to reveal new facets as it matures on the skin. Like a musician selecting a palette of notes and blending them into a symphony of scent, it is the perfumer's intuition that determines when the accord has found its true form.</p>
+        </div>
+        <div class="sf-item">
+          <p class="sf-item-title">The physical edition</p>
+          <p class="sf-item-body">Each material produces a physical edition considered with the same attention as the fragrance itself. Cotton rag paper, hand-torn. A glassine specimen envelope, addressed. A handwritten smell note. The object is designed to be held, placed on a surface and returned to. It is the first impression of the house — and the most direct encounter with the terrain it documents.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CLOSING QUOTE -->
+  <div class="closing-quote">
+    <blockquote>"Memory is the perfume of the soul."</blockquote>
+    <p class="closing-attribution">GEORGE SAND</p>
+  </div>
+
+  <footer>
+    <span class="footer-mark">HOUSE OF TERRAIN · LONDON</span>
+    <span class="footer-note">Est. 2026</span>
+  </footer>
+
+</div>
+<script>
+(function(){
+  var nav = document.querySelector('nav');
+  var lastY = window.scrollY;
+  var ticking = false;
+  function onScroll(){
+    var y = window.scrollY;
+    if (y < 40) { nav.classList.remove('nav-hidden'); }
+    else if (y > lastY) { nav.classList.add('nav-hidden'); }
+    else { nav.classList.remove('nav-hidden'); }
+    lastY = y;
+    ticking = false;
+  }
+  window.addEventListener('scroll', function(){
+    if (!ticking) { window.requestAnimationFrame(onScroll); ticking = true; }
+  });
+  var burger = document.querySelector('.nav-burger');
+  var links = document.querySelector('.nav-links');
+  if (burger && links) {
+    burger.addEventListener('click', function(){
+      links.classList.toggle('open');
+      burger.classList.toggle('open');
+    });
+    links.querySelectorAll('a').forEach(function(a){
+      a.addEventListener('click', function(){
+        links.classList.remove('open');
+        burger.classList.remove('open');
+      });
+    });
+  }
+})();
+</script>
+</body>
+</html>
