@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Terrain Index — House of Terrain</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Sans:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { background: #FFFFFF; color: #1A1714; font-family: 'DM Sans', sans-serif; font-weight: 300; }
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 2rem 3rem;
+    background: transparent;
+    transition: transform 0.4s ease;
+  }
+  nav.nav-hidden { transform: translateY(-100%); }
+  .nav-mark { font-family: 'Cormorant Garamond', serif; font-size: 0.95rem; letter-spacing: 0.25em; color: #1A1714; font-weight: 300; text-decoration: none; }
+  .nav-links { display: flex; gap: 2.5rem; align-items: center; }
+  .nav-links a { font-size: 0.68rem; color: #A09288; letter-spacing: 0.14em; text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover, .nav-links a.active { color: #1A1714; }
+  .nav-burger { display: none; flex-direction: column; gap: 5px; cursor: pointer; background: none; border: none; padding: 0.4rem; }
+  .nav-burger span { width: 20px; height: 1px; background: #1A1714; display: block; transition: transform 0.3s ease, opacity 0.3s ease; }
+  .nav-burger.open span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+  .nav-burger.open span:nth-child(2) { opacity: 0; }
+  .nav-burger.open span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+  .page-content { padding-top: 7rem; }
+  .index-header { padding: 4rem 3rem 3rem; border-bottom: 0.5px solid #C4BAB0; display: flex; justify-content: space-between; align-items: flex-end; }
+  .index-header-left {}
+  .index-label { font-size: 0.6rem; color: #A09288; letter-spacing: 0.22em; display: block; margin-bottom: 0.6rem; }
+  .index-title { font-family: 'Cormorant Garamond', serif; font-size: 2.5rem; font-weight: 300; color: #1A1714; }
+  .index-desc { font-size: 0.8rem; color: #6B6055; max-width: 42ch; line-height: 1.8; margin-top: 0.8rem; }
+  .index-count { font-size: 0.68rem; color: #B0A89E; text-align: right; }
+  .cards-section { padding: 3rem; }
+  .cards-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+
+  .flip-card { height: 520px; perspective: 1200px; cursor: pointer; }
+  .flip-inner { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1); }
+  .flip-card.flipped .flip-inner { transform: rotateY(180deg); }
+  .flip-front, .flip-back { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; background: #EFEFEF; border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; }
+  .flip-back { transform: rotateY(180deg); padding: 1.5rem 1.4rem 1.4rem; }
+
+  .card-photo { width: 100%; height: 200px; flex-shrink: 0; background: #EFEFEF; position: relative; overflow: hidden; }
+  .card-photo-placeholder { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+  .card-photo-placeholder svg { width: 36px; opacity: 0.2; }
+  .card-photo-label { position: absolute; bottom: 0.8rem; left: 0.9rem; font-size: 0.55rem; color: #8A8078; letter-spacing: 0.14em; }
+  .card-body { padding: 1.2rem 1.3rem 1.3rem; display: flex; flex-direction: column; flex: 1; }
+  .card-toprow { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.9rem; }
+  .card-num { font-size: 0.7rem; color: #8A8078; letter-spacing: 0.05em; font-weight: 400; }
+  .card-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 2px; }
+  .card-name { font-family: 'Cormorant Garamond', serif; font-size: 1.15rem; font-weight: 400; color: #1A1714; margin-bottom: 0.2rem; line-height: 1.2; }
+  .card-latin { font-size: 0.62rem; font-weight: 500; color: #7A3020; margin-bottom: 0.6rem; letter-spacing: 0.03em; }
+  .card-desc { font-size: 0.74rem; color: #5A5248; line-height: 1.75; flex: 1; }
+  .flip-hint { font-size: 0.55rem; color: #B0A89E; letter-spacing: 0.1em; text-align: right; margin-top: 0.5rem; }
+
+  .back-toprow { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 1.2rem; }
+  .back-num-name { display: flex; gap: 0.7rem; align-items: baseline; }
+  .back-num { font-size: 0.7rem; color: #8A8078; font-weight: 400; }
+  .back-name { font-size: 0.9rem; font-weight: 400; color: #1A1714; font-family: 'Cormorant Garamond', serif; }
+  .back-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+  .back-section { margin-bottom: 0.9rem; }
+  .back-section-label { font-size: 0.6rem; color: #A09288; letter-spacing: 0.1em; margin-bottom: 0.25rem; }
+  .back-section-text { font-size: 0.75rem; color: #5A5248; line-height: 1.75; }
+  .back-section:first-of-type .back-section-text { font-family: 'Cormorant Garamond', serif; font-size: 1rem; font-style: italic; color: #1A1714; line-height: 1.4; }
+  .back-footer { margin-top: auto; padding-top: 0.9rem; border-top: 0.5px solid #C8C0B6; display: flex; justify-content: space-between; align-items: baseline; }
+  .back-footer-label { font-size: 0.6rem; font-weight: 500; color: #1A1714; margin-bottom: 0.2rem; }
+  .back-footer-val { font-size: 0.74rem; color: #5A5248; }
+  .back-arrow { font-size: 0.9rem; color: #A09288; }
+  .flip-hint-back { font-size: 0.58rem; color: #B0A89E; letter-spacing: 0.1em; margin-top: 0.6rem; }
+
+  .research-note { padding: 3rem; display: flex; align-items: baseline; gap: 2rem; }
+  .research-num { font-family: 'Cormorant Garamond', serif; font-size: 2.5rem; font-weight: 300; color: #C4BAB0; }
+  .research-text { font-size: 0.78rem; color: #A09288; line-height: 1.7; max-width: 40ch; }
+
+  /* HOW TO SMELL (merged section) */
+  .hts-opening { padding: 5rem 3rem 4rem; border-top: 0.5px solid #C4BAB0; max-width: 820px; }
+  .hts-opening-label { font-size: 0.6rem; color: #A09288; letter-spacing: 0.22em; display: block; margin-bottom: 2rem; }
+  .hts-opening-title { font-family: 'Cormorant Garamond', serif; font-size: clamp(2rem, 4.2vw, 3.2rem); font-weight: 300; line-height: 1.15; color: #1A1714; margin-bottom: 2rem; }
+  .hts-opening-title em { font-style: italic; color: #7A3020; }
+  .hts-opening-body { font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; font-weight: 300; line-height: 1.7; color: #5A5248; max-width: 60ch; }
+
+  .hts-framework { padding: 0 3rem; }
+  .hts-term { display: grid; grid-template-columns: 260px 1fr; gap: 5rem; padding: 3.5rem 0; border-bottom: 0.5px solid #DDD6CC; align-items: start; }
+  .hts-term:first-child { border-top: 0.5px solid #C4BAB0; }
+  .hts-term-num { font-size: 0.6rem; color: #C4BAB0; letter-spacing: 0.1em; display: block; margin-bottom: 1rem; }
+  .hts-term-name { font-family: 'Cormorant Garamond', serif; font-size: 1.6rem; font-weight: 300; color: #1A1714; line-height: 1.2; margin-bottom: 0.5rem; }
+  .hts-term-name em { font-style: italic; color: #7A3020; }
+  .hts-term-technical { font-size: 0.65rem; color: #B0A89E; letter-spacing: 0.12em; }
+  .hts-term-body { font-size: 0.82rem; color: #5A5248; line-height: 1.95; margin-bottom: 1.3rem; }
+  .hts-term-example { background: #EFEFEF; border-radius: 2px; padding: 1.1rem 1.3rem; font-size: 0.75rem; color: #6B6055; line-height: 1.75; border-left: 2px solid #C4BAB0; }
+  .hts-term-example-label { font-size: 0.58rem; color: #A09288; letter-spacing: 0.12em; display: block; margin-bottom: 0.5rem; }
+
+  .hts-hot { padding: 4.5rem 3rem; background: #EFEFEF; border-top: 0.5px solid #C4BAB0; border-bottom: 0.5px solid #C4BAB0; }
+  .hts-hot-label { font-size: 0.6rem; color: #A09288; letter-spacing: 0.22em; display: block; margin-bottom: 2.5rem; }
+  .hts-hot-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: #C4BAB0; }
+  .hts-hot-card { background: #EFEFEF; padding: 2.2rem; }
+  .hts-hot-card-label { font-size: 0.6rem; color: #A09288; letter-spacing: 0.12em; display: block; margin-bottom: 0.9rem; }
+  .hts-hot-card-title { font-family: 'Cormorant Garamond', serif; font-size: 1.25rem; font-weight: 400; color: #1A1714; margin-bottom: 0.7rem; }
+  .hts-hot-card-body { font-size: 0.78rem; color: #6B6055; line-height: 1.8; }
+
+  .hts-htu { padding: 4.5rem 3rem; border-bottom: 0.5px solid #C4BAB0; }
+  .hts-htu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5rem; }
+  .hts-htu-title { font-family: 'Cormorant Garamond', serif; font-size: 1.6rem; font-weight: 300; line-height: 1.3; color: #1A1714; margin-top: 1.8rem; }
+  .hts-htu-title em { font-style: italic; color: #7A3020; }
+  .hts-htu-steps { display: flex; flex-direction: column; }
+  .hts-htu-step { padding: 1.1rem 0; border-bottom: 0.5px solid #DDD6CC; display: grid; grid-template-columns: 2rem 1fr; gap: 1rem; align-items: baseline; }
+  .hts-htu-step:first-child { border-top: 0.5px solid #DDD6CC; }
+  .hts-htu-step-num { font-size: 0.62rem; color: #B0A89E; }
+  .hts-htu-step-text { font-size: 0.8rem; color: #5A5248; line-height: 1.7; }
+
+  .hts-closing { padding: 5rem 3rem; }
+  .hts-closing-quote { font-family: 'Cormorant Garamond', serif; font-size: clamp(1.3rem, 2.6vw, 1.8rem); font-weight: 300; font-style: italic; line-height: 1.5; color: #6B6055; max-width: 54ch; border-left: 1px solid #8B3A2A; padding-left: 2rem; }
+  .hts-closing-attr { font-size: 0.65rem; color: #A09288; letter-spacing: 0.1em; margin-top: 1.1rem; padding-left: 2rem; }
+
+  @media (max-width: 900px) {
+    .hts-term { grid-template-columns: 1fr; gap: 1.5rem; padding: 2.5rem 0; }
+    .hts-hot-grid { grid-template-columns: 1fr; }
+    .hts-htu-grid { grid-template-columns: 1fr; gap: 2.5rem; }
+  }
+
+  footer { padding: 2rem 3rem; display: flex; justify-content: space-between; align-items: baseline; border-top: 0.5px solid #C4BAB0; }
+  .footer-mark { font-family: 'Cormorant Garamond', serif; font-size: 0.85rem; letter-spacing: 0.2em; color: #A09288; }
+  .footer-note { font-size: 0.62rem; color: #B8AFA6; }
+
+  @media (max-width: 1100px) { .cards-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 700px) {
+    nav { padding: 1.2rem 1.5rem; }
+    .nav-links { display: none; position: fixed; inset: 0; background: #FFFFFF; flex-direction: column; justify-content: center; align-items: center; gap: 2.2rem; z-index: 49; }
+    .nav-links.open { display: flex; }
+    .nav-links a { font-size: 1rem; }
+    .nav-burger { display: flex; z-index: 51; }
+    .cards-section { padding: 2rem 1.5rem; }
+    .cards-grid { grid-template-columns: 1fr; }
+    .index-header { padding: 3rem 1.5rem 2rem; flex-direction: column; gap: 1rem; align-items: flex-start; }
+    footer { padding: 1.5rem; flex-direction: column; gap: 0.5rem; }
+  }
+  @keyframes phPulse { 0%, 100% { opacity: 0.15; } 50% { opacity: 0.34; } }
+  .card-photo-placeholder svg { animation: phPulse 3.4s ease-in-out infinite; }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="salt-and-red.html" class="nav-mark">HOUSE OF TERRAIN</a>
+  <div class="nav-links">
+    <a href="about.html">The House</a>
+    <a href="terrain-index.html" class="active">Archive</a>
+    <a href="collections.html">Collections</a>
+  </div>
+  <button class="nav-burger" aria-label="Menu"><span></span><span></span><span></span></button>
+</nav>
+
+<div class="page-content">
+
+  <div class="index-header">
+    <div class="index-header-left">
+      <span class="index-label">THE ARCHIVE · FIELD DOCUMENTS</span>
+      <h1 class="index-title">Terrain Index</h1>
+      <p class="index-desc">Every material House of Terrain encounters is documented before it is composed. These are the field records — smell notes, terrain coordinates, and the question each material poses.</p>
+    </div>
+    <div class="index-count">16 of 100 materials<br>documented</div>
+  </div>
+
+  <div class="cards-section">
+    <div class="cards-grid">
+
+      <div class="flip-card" onclick="this.classList.toggle('flipped')">
+        <div class="flip-inner">
+          <div class="flip-front">
+            <div class="card-photo" style="background:#E4E4E4"><div class="card-photo-placeholder"><svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="32" height="32" rx="1" stroke="#1A1714" stroke-width="0.8"/><circle cx="12" cy="14" r="4" stroke="#1A1714" stroke-width="0.7"/><path d="M2 26 L10 18 L18 24 L26 16 L34 22" stroke="#1A1714" stroke-width="0.7" fill="none"/></svg></div><span class="card-photo-label">EAST AFRICA · ROCKY OUTCROPS</span></div>
+            <div class="card-body"><div class="card-toprow"><span class="card-num">[01]</span><span class="card-dot" style="background:#5C3A28"></span></div><p class="card-name">Hyraceum</p><p class="card-latin">Africa stone · East Africa</p><p class="card-desc">Fossilised excrement of the rock hyrax — aged over centuries in East African rock outcrops into a resinous, animalic material of extraordinary complexity. Terrain, hardened by time.</p><p class="flip-hint">TAP TO LEARN MORE</p></div>
+          </div>
+          <div class="flip-back">
+            <div class="back-toprow"><div class="back-num-name"><span class="back-num">[01]</span><span class="back-name">Hyraceum</span></div><span class="back-dot" style="background:#5C3A28"></span></div>
+            <div class="back-section"><p class="back-section-label">The question</p><p class="back-section-text">What does time smell like?</p></div>
+            <div class="back-section"><p class="back-section-label">Terrain material</p><p class="back-section-text">Hyraceum — fossilised hyrax resin, aged over centuries in East African rock outcrops. Found in specific locations that cannot be replicated. The singular terrain signature this archive starts with.</p></div>
+            <div class="back-section"><p class="back-section-label">Smell note</p><p class="back-section-text">First contact: animalic, leathery, faintly urinal. Warmed: tobacco, castoreum, dried fruit. Memory: old stone in warm sun. Emotional register: ancestral, uncanny, irreplaceable.</p></div>
+            <div class="back-footer"><div><p class="back-footer-label">Terrain</p><p class="back-footer-val">East Africa · Rocky outcrops</p></div><span class="back-arrow">↗</span></div>
+            <p class="flip-hint-back">TAP TO RETURN</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flip-card" onclick="this.classList.toggle('flipped')">
+        <div class="flip-inner">
+          <div class="flip-front">
+            <div class="card-photo" style="background:#E4E4E4"><div class="card-photo-placeholder"><svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="32" height="32" rx="1" stroke="#1A1714" stroke-width="0.8"/><circle cx="12" cy="14" r="4" stroke="#1A1714" stroke-width="0.7"/><path d="M2 26 L10 18 L18 24 L26 16 L34 22" stroke="#1A1714" stroke-width="0.7" fill="none"/></svg></div><span class="card-photo-label">SAHEL · SAVANNAH WOODLAND</span></div>
+            <div class="card-body"><div class="card-toprow"><span class="card-num">[02]</span><span class="card-dot" style="background:#6B5A3A"></span></div><p class="card-name">Baobab bark after rain</p><p class="card-latin">Adansonia digitata · Sahel</p><p class="card-desc">Not the fruit. Not the oil. The bark itself, after rainfall — woody, mineral, faintly green. A register entirely unclaimed by fine perfumery.</p><p class="flip-hint">TAP TO LEARN MORE</p></div>
+          </div>
+          <div class="flip-back">
+            <div class="back-toprow"><div class="back-num-name"><span class="back-num">[02]</span><span class="back-name">Baobab bark after rain</span></div><span class="back-dot" style="background:#6B5A3A"></span></div>
+            <div class="back-section"><p class="back-section-label">The question</p><p class="back-section-text">What does a thousand years smell like?</p></div>
+            <div class="back-section"><p class="back-section-label">Terrain material</p><p class="back-section-text">Baobab bark after rain — not the fruit, not the oil. The tree itself, after the first rain of the season. The fruit extract is a global wellness commodity. The bark is entirely untouched.</p></div>
+            <div class="back-section"><p class="back-section-label">Smell note</p><p class="back-section-text">First contact: dry, chalky, ancient wood. Warmed by rain: green, mineral, faintly sweet. Memory: stepping under a baobab after a dry-season shower. Emotional register: longevity, rootedness, quiet power.</p></div>
+            <div class="back-footer"><div><p class="back-footer-label">Terrain</p><p class="back-footer-val">Sahel · Savannah woodland</p></div><span class="back-arrow">↗</span></div>
+            <p class="flip-hint-back">TAP TO RETURN</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flip-card" onclick="this.classList.toggle('flipped')">
+        <div class="flip-inner">
+          <div class="flip-front">
+            <div class="card-photo" style="background:#E4E4E4"><div class="card-photo-placeholder"><svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="32" height="32" rx="1" stroke="#1A1714" stroke-width="0.8"/><circle cx="12" cy="14" r="4" stroke="#1A1714" stroke-width="0.7"/><path d="M2 26 L10 18 L18 24 L26 16 L34 22" stroke="#1A1714" stroke-width="0.7" fill="none"/></svg></div><span class="card-photo-label">WEST AFRICA · FOREST ZONE</span></div>
+            <div class="card-body"><div class="card-toprow"><span class="card-num">[03]</span><span class="card-dot" style="background:#4A3828"></span></div><p class="card-name">Grains of Selim</p><p class="card-latin">Xylopia aethiopica · Nigeria</p><p class="card-desc">A spice used for centuries in ritual and cooking across the forest zone. Smoked, it yields a warm, woody, faintly medicinal note. One of the most characterful raw materials in the archive.</p><p class="flip-hint">TAP TO LEARN MORE</p></div>
+          </div>
+          <div class="flip-back">
+            <div class="back-toprow"><div class="back-num-name"><span class="back-num">[03]</span><span class="back-name">Grains of Selim</span></div><span class="back-dot" style="background:#4A3828"></span></div>
+            <div class="back-section"><p class="back-section-label">The question</p><p class="back-section-text">What spice has shaped this landscape's rituals for two thousand years — and has no house?</p></div>
+            <div class="back-section"><p class="back-section-label">Terrain material</p><p class="back-section-text">Grains of Selim (uda) — used across West and Central Africa for two thousand years in ritual, medicine, and cooking. A spice of extraordinary character that fine perfumery has barely touched.</p></div>
+            <div class="back-section"><p class="back-section-label">Smell note</p><p class="back-section-text">First contact: warm, resinous, pepper-adjacent. Smoked: woody, camphoraceous, dry. Memory: an open fire, a clay pot, a kitchen that has cooked for generations. Emotional register: communal, ancient, grounding.</p></div>
+            <div class="back-footer"><div><p class="back-footer-label">Terrain</p><p class="back-footer-val">West Africa · Forest zone</p></div><span class="back-arrow">↗</span></div>
+            <p class="flip-hint-back">TAP TO RETURN</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flip-card" onclick="this.classList.toggle('flipped')">
+        <div class="flip-inner">
+          <div class="flip-front">
+            <div class="card-photo" style="background:#E4E4E4"><div class="card-photo-placeholder"><svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="32" height="32" rx="1" stroke="#1A1714" stroke-width="0.8"/><circle cx="12" cy="14" r="4" stroke="#1A1714" stroke-width="0.7"/><path d="M2 26 L10 18 L18 24 L26 16 L34 22" stroke="#1A1714" stroke-width="0.7" fill="none"/></svg></div><span class="card-photo-label">SAHEL · SUB-SAHARAN TROPICS</span></div>
+            <div class="card-body"><div class="card-toprow"><span class="card-num">[04]</span><span class="card-dot" style="background:#8B3A2A"></span></div><p class="card-name">Laterite soil at noon</p><p class="card-latin">Ferralitic earth · Sahel</p><p class="card-desc">The red iron-rich earth of the Sahel at peak heat. Dry, mineral, faintly metallic. Formed over millennia of tropical weathering. The ground beneath every road, every market, every compound.</p><p class="flip-hint">TAP TO LEARN MORE</p></div>
+          </div>
+          <div class="flip-back">
+            <div class="back-toprow"><div class="back-num-name"><span class="back-num">[04]</span><span class="back-name">Laterite soil at noon</span></div><span class="back-dot" style="background:#8B3A2A"></span></div>
+            <div class="back-section"><p class="back-section-label">The question</p><p class="back-section-text">What does the ground smell like — not the landscape, the actual earth?</p></div>
+            <div class="back-section"><p class="back-section-label">Terrain material</p><p class="back-section-text">Laterite — the dominant red iron-rich soil of the sub-Saharan tropics, formed over millennia of weathering. One of the world's most distinctive terrain types. One of its least explored olfactory signatures.</p></div>
+            <div class="back-section"><p class="back-section-label">Smell note</p><p class="back-section-text">First contact: dry, mineral, iron. At noon heat: faintly metallic, warm, arid. Memory: the ground before rain. Emotional register: rootedness, heat, the clarity of stillness.</p></div>
+            <div class="back-footer"><div><p class="back-footer-label">Terrain</p><p class="back-footer-val">Sahel · Sub-Saharan tropics</p></div><span class="back-arrow">↗</span></div>
+            <p class="flip-hint-back">TAP TO RETURN</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flip-card" onclick="this.classList.toggle('flipped')">
+        <div class="flip-inner">
+          <div class="flip-front">
+            <div class="card-photo" style="background:#E4E4E4"><div class="card-photo-placeholder"><svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="32" height="32" rx="1" stroke="#1A1714" stroke-width="0.8"/><circle cx="12" cy="14" r="4" stroke="#1A1714" stroke-width="0.7"/><path d="M2 26 L10 18 L18 24 L26 16 L34 22" stroke="#1A1714" stroke-width="0.7" fill="none"/></svg></div><span class="card-photo-label">SOMALIA · HORN OF AFRICA</span></div>
+            <div class="card-body"><div class="card-toprow"><span class="card-num">[05]</span><span class="card-dot" style="background:#5C4020"></span></div><p class="card-name">Opoponax resin</p><p class="card-latin">Commiphora guidottii · Somalia</p><p class="card-desc">A myrrh relative from the Horn of Africa — balsamic, spiced, ancient. Traded along incense routes for three thousand years. One of the great resinous materials of the terrain archive.</p><p class="flip-hint">TAP TO LEARN MORE</p></div>
+          </div>
+          <div class="flip-back">
+            <div class="back-toprow"><div class="back-num-name"><span class="back-num">[05]</span><span class="back-name">Opoponax resin</span></div><span class="back-dot" style="background:#5C4020"></span></div>
+            <div class="back-section"><p class="back-section-label">The question</p><p class="back-section-text">What does three thousand years of trade smell like — when nobody named it?</p></div>
+            <div class="back-section"><p class="back-section-label">Terrain material</p><p class="back-section-text">Opoponax — harvested in Somalia and the Horn of Africa for three millennia. Used in Egyptian kyphi and along ancient incense routes. A material of immense history and almost no contemporary presence in fine perfumery.</p></div>
+            <div class="back-section"><p class="back-section-label">Smell note</p><p class="back-section-text">First contact: sweet resin, faintly vanilla, caramel warmth. Warmed: toffee, labdanum-adjacent, honeyed smoke. Memory: incense cooling after a ceremony. Emotional register: sacred, warm, enduring.</p></div>
+            <div class="back-footer"><div><p class="back-footer-label">Terrain</p><p class="back-footer-val">Somalia · Horn of Africa</p></div><span class="back-arrow">↗</span></div>
+            <p class="flip-hint-back">TAP TO RETURN</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flip-card" onclick="this.classList.toggle('flipped')">
+        <div class="flip-inner">
+          <div class="flip-front">
+            <div class="card-photo" style="background:#E4E4E4"><div class="card-photo-placeholder"><svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="32" height="32" rx="1" stroke="#1A1714" stroke-width="0.8"/><circle cx="12" cy="14" r="4" stroke="#1A1714" stroke-width="0.7"/><path d="M2 26 L10 18 L18 24 L26 16 L34 22" stroke="#1A1714" stroke-width="0.7" fill="none"/></svg></div><span class="card-photo-label">MOROCCO · ATLAS MOUNTAINS</span></div>
+            <div class="card-body"><div class="card-toprow"><span class="card-num">[06]</span><span class="card-dot" style="background:#7A6040"></span></div><p class="card-name">Sandarac</p><p class="card-latin">Tetraclinis articulata · Atlas Mountains</p><p class="card-desc">Resin from the Tetraclinis Articulata — a tree native to Morocco's Atlas Mountains. Translucent chips, warm, frankincense-adjacent. One of the oldest resin traditions in the world.</p><p class="flip-hint">TAP TO LEARN MORE</p></div>
+          </div>
+          <div class="flip-back">
+            <div class="back-toprow"><div class="back-num-name"><span class="back-num">[06]</span><span class="back-name">Sandarac</span></div><span class="back-dot" style="background:#7A6040"></span></div>
+            <div class="back-section"><p class="back-section-label">The question</p><p class="back-section-text">What is the forgotten resin signature of the Atlas?</p></div>
+            <div class="back-section"><p class="back-section-label">Terrain material</p><p class="back-section-text">Sandarac — resin of the Tetraclinis Articulata, an endangered conifer specific to Morocco's Atlas Mountains. Translucent pale yellow chips, used in ancient varnishes, incense, and early perfumery. Almost entirely absent from contemporary use.</p></div>
+            <div class="back-section"><p class="back-section-label">Smell note</p><p class="back-section-text">First contact: bright, slightly citric, coniferous. Warmed: frankincense-like, powdery, dry. Memory: a mountain morning, resin warming on bark. Emotional register: clarity, elevation, ancient quiet.</p></div>
+            <div class="back-footer"><div><p class="back-footer-label">Terrain</p><p class="back-footer-val">Morocco · Atlas Mountains</p></div><span class="back-arrow">↗</span></div>
+            <p class="flip-hint-back">TAP TO RETURN</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flip-card" onclick="this.classList.toggle('flipped')">
+        <div class="flip-inner">
+          <div class="flip-front">
+            <div class="card-photo" style="background:#E4E4E4"><div class="card-photo-placeholder"><svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="32" height="32" rx="1" stroke="#1A1714" stroke-width="0.8"/><circle cx="12" cy="14" r="4" stroke="#1A1714" stroke-width="0.7"/><path d="M2 26 L10 18 L18 24 L26 16 L34 22" stroke="#1A1714" stroke-width="0.7" fill="none"/></svg></div><span class="card-photo-label">WEST AFRICA · GUINEA SAVANNAH</span></div>
+            <div class="card-body"><div class="card-toprow"><span class="card-num">[07]</span><span class="card-dot" style="background:#6B4A28"></span></div><p class="card-name">Termite mound earth</p><p class="card-latin">Macrotermes terrain · West Africa</p><p class="card-desc">Architecture built over decades — mineral-rich, structurally dense, warm and dry. The most complex structures on the savannah. A terrain signature that fine perfumery has never considered.</p><p class="flip-hint">TAP TO LEARN MORE</p></div>
+          </div>
+          <div class="flip-back">
+            <div class="back-toprow"><div class="back-num-name"><span class="back-num">[07]</span><span class="back-name">Termite mound earth</span></div><span class="back-dot" style="background:#6B4A28"></span></div>
+            <div class="back-section"><p class="back-section-label">The question</p><p class="back-section-text">Who built this landscape before we did?</p></div>
+            <div class="back-section"><p class="back-section-label">Terrain material</p><p class="back-section-text">Termite mound earth — mineral-rich, processed through Macrotermes bodies over decades. Structurally unlike any other soil. Specific to the savannah. A terrain signature that fine perfumery has never considered.</p></div>
+            <div class="back-section"><p class="back-section-label">Smell note</p><p class="back-section-text">First contact: dry, chalky, warm mineral. Broken open: faintly woody, iron-tinged, alive. Memory: a mound at dusk, earth still warm. Emotional register: architecture, patience, deep time.</p></div>
+            <div class="back-footer"><div><p class="back-footer-label">Terrain</p><p class="back-footer-val">West Africa · Guinea savannah</p></div><span class="back-arrow">↗</span></div>
+            <p class="flip-hint-back">TAP TO RETURN</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flip-card" onclick="this.classList.toggle('flipped')">
+        <div class="flip-inner">
+          <div class="flip-front">
+            <div class="card-photo" style="background:#E4E4E4"><div class="card-photo-placeholder"><svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="32" height="32" rx="1" stroke="#1A1714" stroke-width="0.8"/><circle cx="12" cy="14" r="4" stroke="#1A1714" stroke-width="0.7"/><path d="M2 26 L10 18 L18 24 L26 16 L34 22" stroke="#1A1714" stroke-width="0.7" fill="none"/></svg></div><span class="card-photo-label">MALI · SAHEL CRAFT TRADITION</span></div>
+            <div class="card-body"><div class="card-toprow"><span class="card-num">[08]</span><span class="card-dot" style="background:#3A3050"></span></div><p class="card-name">Indigo fermentation pit</p><p class="card-latin">Indigofera tinctoria · Mali</p><p class="card-desc">The fermentation process itself — not the dye. Mali's indigo pits hold a centuries-old bacterial culture. Earthy, sharp, alive. A craft process rendered as fragrance concept.</p><p class="flip-hint">TAP TO LEARN MORE</p></div>
+          </div>
+          <div class="flip-back">
+            <div class="back-toprow"><div class="back-num-name"><span class="back-num">[08]</span><span class="back-name">Indigo fermentation pit</span></div><span class="back-dot" style="background:#3A3050"></span></div>
+            <div class="back-section"><p class="back-section-label">The question</p><p class="back-section-text">What does centuries-old knowledge smell like when it's still alive?</p></div>
+            <div class="back-section"><p class="back-section-label">Terrain material</p><p class="back-section-text">Indigo fermentation pit — the living bacterial culture of Mali's dye tradition, maintained across generations. The dye has been studied. The smell of its making is the discovery.</p></div>
+            <div class="back-section"><p class="back-section-label">Smell note</p><p class="back-section-text">First contact: sharp, fermented, green. Active: earthy, slightly acidic, alive. Memory: the back of a dyehouse in morning light. Emotional register: craft, continuity, knowledge that passes through hands.</p></div>
+            <div class="back-footer"><div><p class="back-footer-label">Terrain</p><p class="back-footer-val">Mali · Sahel craft tradition</p></div><span class="back-arrow">↗</span></div>
+            <p class="flip-hint-back">TAP TO RETURN</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flip-card" onclick="this.classList.toggle('flipped')">
+        <div class="flip-inner">
+          <div class="flip-front">
+            <div class="card-photo" style="background:#E4E4E4"><div class="card-photo-placeholder"><svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="32" height="32" rx="1" stroke="#1A1714" stroke-width="0.8"/><circle cx="12" cy="14" r="4" stroke="#1A1714" stroke-width="0.7"/><path d="M2 26 L10 18 L18 24 L26 16 L34 22" stroke="#1A1714" stroke-width="0.7" fill="none"/></svg></div><span class="card-photo-label">SAHEL · WEST AFRICA</span></div>
+            <div class="card-body"><div class="card-toprow"><span class="card-num">[09]</span><span class="card-dot" style="background:#9C8258"></span></div><p class="card-name">Harmattan dust before first rain</p><p class="card-latin">Atmospheric particulate · Sahel</p><p class="card-desc">The dry, mineral haze that rolls off the Sahara each winter — present until the first rains break it. A weather event treated as raw material. Nothing this transient has been captured before.</p><p class="flip-hint">TAP TO LEARN MORE</p></div>
+          </div>
+          <div class="flip-back">
+            <div class="back-toprow"><div class="back-num-name"><span class="back-num">[09]</span><span class="back-name">Harmattan dust before first rain</span></div><span class="back-dot" style="background:#9C8258"></span></div>
+            <div class="back-section"><p class="back-section-label">The question</p><p class="back-section-text">What does a season smell like in the hour before it changes?</p></div>
+            <div class="back-section"><p class="back-section-label">Terrain material</p><p class="back-section-text">Harmattan — the dry, dust-laden trade wind that sweeps from the Sahara across the Sahel each winter, coating everything in a fine mineral haze until the first rain breaks it. No perfumer has attempted to capture weather itself.</p></div>
+            <div class="back-section"><p class="back-section-label">Smell note</p><p class="back-section-text">First contact: dry, dusty, faintly metallic. Building: parched earth, warm stone, static air. Memory: waking to a hazed sun through curtains. Emotional register: anticipation, dryness, the held breath before change.</p></div>
+            <div class="back-footer"><div><p class="back-footer-label">Terrain</p><p class="back-footer-val">Sahel · West Africa</p></div><span class="back-arrow">↗</span></div>
+            <p class="flip-hint-back">TAP TO RETURN</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flip-card" onclick="this.classList.toggle('flipped')">
+        <div class="flip-inner">
+          <div class="flip-front">
+            <div class="card-photo" style="background:#E4E4E4"><div class="card-photo-placeholder"><svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="32" height="32" rx="1" stroke="#1A1714" stroke-width="0.8"/><circle cx="12" cy="14" r="4" stroke="#1A1714" stroke-width="0.7"/><path d="M2 26 L10 18 L18 24 L26 16 L34 22" stroke="#1A1714" stroke-width="0.7" fill="none"/></svg></div><span class="card-photo-label">BENIN · WEST AFRICA</span></div>
+            <div class="card-body"><div class="card-toprow"><span class="card-num">[10]</span><span class="card-dot" style="background:#5A3A1E"></span></div><p class="card-name">Bronze casting furnace</p><p class="card-latin">Lost-wax casting · Benin</p><p class="card-desc">The furnace heat and scorched clay mould of Benin's centuries-old bronze-casting tradition — metallic, smoked, ceremonial. A craft process, not a material, rendered as scent.</p><p class="flip-hint">TAP TO LEARN MORE</p></div>
+          </div>
+          <div class="flip-back">
+            <div class="back-toprow"><div class="back-num-name"><span class="back-num">[10]</span><span class="back-name">Bronze casting furnace</span></div><span class="back-dot" style="background:#5A3A1E"></span></div>
+            <div class="back-section"><p class="back-section-label">The question</p><p class="back-section-text">What does six hundred years of casting smell like at the moment of pour?</p></div>
+            <div class="back-section"><p class="back-section-label">Terrain material</p><p class="back-section-text">Bronze casting furnace — the heat, smoke, and scorched clay mould of Benin's lost-wax casting tradition, unbroken since the Edo Kingdom. The metal has been studied for centuries. The furnace, never.</p></div>
+            <div class="back-section"><p class="back-section-label">Smell note</p><p class="back-section-text">First contact: hot metal, scorched clay, faint sulphur. Cooling: smoked earth, mineral, ash. Memory: a workshop at dusk, the mould still warm. Emotional register: ceremony, permanence, craft passed through generations.</p></div>
+            <div class="back-footer"><div><p class="back-footer-label">Terrain</p><p class="back-footer-val">Benin · West Africa</p></div><span class="back-arrow">↗</span></div>
+            <p class="flip-hint-back">TAP TO RETURN</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flip-card" onclick="this.classList.toggle('flipped')">
+        <div class="flip-inner">
+          <div class="flip-front">
+            <div class="card-photo" style="background:#E4E4E4"><div class="card-photo-placeholder"><svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="32" height="32" rx="1" stroke="#1A1714" stroke-width="0.8"/><circle cx="12" cy="14" r="4" stroke="#1A1714" stroke-width="0.7"/><path d="M2 26 L10 18 L18 24 L26 16 L34 22" stroke="#1A1714" stroke-width="0.7" fill="none"/></svg></div><span class="card-photo-label">TANZANIA · EAST AFRICAN COAST</span></div>
+            <div class="card-body"><div class="card-toprow"><span class="card-num">[11]</span><span class="card-dot" style="background:#3E5850"></span></div><p class="card-name">Zanzibar tide pool minerals</p><p class="card-latin">Intertidal mineral accord · Zanzibar</p><p class="card-desc">The mineral, iodine-sharp air of Zanzibar's tide pools at low water — seaweed, salt, warm stone. A coastal register the archive has not yet claimed.</p><p class="flip-hint">TAP TO LEARN MORE</p></div>
+          </div>
+          <div class="flip-back">
+            <div class="back-toprow"><div class="back-num-name"><span class="back-num">[11]</span><span class="back-name">Zanzibar tide pool minerals</span></div><span class="back-dot" style="background:#3E5850"></span></div>
+            <div class="back-section"><p class="back-section-label">The question</p><p class="back-section-text">What does the sea leave behind when it retreats?</p></div>
+            <div class="back-section"><p class="back-section-label">Terrain material</p><p class="back-section-text">Zanzibar tide pools — the exposed mineral floor of the Indian Ocean coastline at low tide, warmed by equatorial sun. Salt, algae, and stone in close concentration. A coastal terrain distinct from any temperate shoreline.</p></div>
+            <div class="back-section"><p class="back-section-label">Smell note</p><p class="back-section-text">First contact: briny, iodine-sharp, warm salt. Settling: seaweed, wet stone, faint sweetness. Memory: bare feet on warm rock at low tide. Emotional register: exposure, patience, the sea's temporary absence.</p></div>
+            <div class="back-footer"><div><p class="back-footer-label">Terrain</p><p class="back-footer-val">Tanzania · East African coast</p></div><span class="back-arrow">↗</span></div>
+            <p class="flip-hint-back">TAP TO RETURN</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flip-card" onclick="this.classList.toggle('flipped')">
+        <div class="flip-inner">
+          <div class="flip-front">
+            <div class="card-photo" style="background:#E4E4E4"><div class="card-photo-placeholder"><svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="32" height="32" rx="1" stroke="#1A1714" stroke-width="0.8"/><circle cx="12" cy="14" r="4" stroke="#1A1714" stroke-width="0.7"/><path d="M2 26 L10 18 L18 24 L26 16 L34 22" stroke="#1A1714" stroke-width="0.7" fill="none"/></svg></div><span class="card-photo-label">ETHIOPIA · HORN OF AFRICA</span></div>
+            <div class="card-body"><div class="card-toprow"><span class="card-num">[12]</span><span class="card-dot" style="background:#2A1810"></span></div><p class="card-name">Ethiopian coffee ceremony smoke</p><p class="card-latin">Coffea arabica · roasted, ceremonial</p><p class="card-desc">The frankincense and green-bean smoke of the Ethiopian coffee ceremony — ritual, not beverage. One of the oldest continuous scent rituals in the world, never composed as fragrance.</p><p class="flip-hint">TAP TO LEARN MORE</p></div>
+          </div>
+          <div class="flip-back">
+            <div class="back-toprow"><div class="back-num-name"><span class="back-num">[12]</span><span class="back-name">Ethiopian coffee ceremony smoke</span></div><span class="back-dot" style="background:#2A1810"></span></div>
+            <div class="back-section"><p class="back-section-label">The question</p><p class="back-section-text">What does a three-thousand-year-old ritual smell like before the coffee is even poured?</p></div>
+            <div class="back-section"><p class="back-section-label">Terrain material</p><p class="back-section-text">Ethiopian coffee ceremony — green beans roasted over charcoal alongside frankincense resin, filling the room before a single cup is served. A ceremony older than most fragrance houses. The smoke has never been composed.</p></div>
+            <div class="back-section"><p class="back-section-label">Smell note</p><p class="back-section-text">First contact: green coffee smoke, resinous, warm. Roasting: dark, toasted, faintly sweet. Memory: a low stool, a clay jebena, an afternoon with no clock. Emotional register: hospitality, patience, communal warmth.</p></div>
+            <div class="back-footer"><div><p class="back-footer-label">Terrain</p><p class="back-footer-val">Ethiopia · Horn of Africa</p></div><span class="back-arrow">↗</span></div>
+            <p class="flip-hint-back">TAP TO RETURN</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flip-card" onclick="this.classList.toggle('flipped')">
+        <div class="flip-inner">
+          <div class="flip-front">
+            <div class="card-photo" style="background:#E4E4E4"><div class="card-photo-placeholder"><svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="32" height="32" rx="1" stroke="#1A1714" stroke-width="0.8"/><circle cx="12" cy="14" r="4" stroke="#1A1714" stroke-width="0.7"/><path d="M2 26 L10 18 L18 24 L26 16 L34 22" stroke="#1A1714" stroke-width="0.7" fill="none"/></svg></div><span class="card-photo-label">SAHARA · TUAREG CRAFT TRADITION</span></div>
+            <div class="card-body"><div class="card-toprow"><span class="card-num">[13]</span><span class="card-dot" style="background:#3A2414"></span></div><p class="card-name">Tuareg leather saddle smoke</p><p class="card-latin">Camel leather, smoke-cured · Sahara</p><p class="card-desc">Camel-leather saddlework smoke-cured over acacia fires — a nomadic craft material carrying the smell of the Sahara's long trade routes.</p><p class="flip-hint">TAP TO LEARN MORE</p></div>
+          </div>
+          <div class="flip-back">
+            <div class="back-toprow"><div class="back-num-name"><span class="back-num">[13]</span><span class="back-name">Tuareg leather saddle smoke</span></div><span class="back-dot" style="background:#3A2414"></span></div>
+            <div class="back-section"><p class="back-section-label">The question</p><p class="back-section-text">What does a thousand years of crossing the desert smell like?</p></div>
+            <div class="back-section"><p class="back-section-label">Terrain material</p><p class="back-section-text">Tuareg saddle leather — hand-tanned camel hide, cured over slow acacia-wood fires as part of a craft tradition tied to trans-Saharan trade routes stretching back a millennium. The leather is documented. The curing smoke never has been.</p></div>
+            <div class="back-section"><p class="back-section-label">Smell note</p><p class="back-section-text">First contact: smoked leather, dry acacia, warm hide. Settling: resinous, dusty, faintly animalic. Memory: a caravan camp at nightfall. Emotional register: endurance, distance, quiet self-sufficiency.</p></div>
+            <div class="back-footer"><div><p class="back-footer-label">Terrain</p><p class="back-footer-val">Sahara · Tuareg craft tradition</p></div><span class="back-arrow">↗</span></div>
+            <p class="flip-hint-back">TAP TO RETURN</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flip-card" onclick="this.classList.toggle('flipped')">
+        <div class="flip-inner">
+          <div class="flip-front">
+            <div class="card-photo" style="background:#E4E4E4"><div class="card-photo-placeholder"><svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="32" height="32" rx="1" stroke="#1A1714" stroke-width="0.8"/><circle cx="12" cy="14" r="4" stroke="#1A1714" stroke-width="0.7"/><path d="M2 26 L10 18 L18 24 L26 16 L34 22" stroke="#1A1714" stroke-width="0.7" fill="none"/></svg></div><span class="card-photo-label">NAMIBIA · SOUTHERN AFRICA</span></div>
+            <div class="card-body"><div class="card-toprow"><span class="card-num">[14]</span><span class="card-dot" style="background:#8A8270"></span></div><p class="card-name">Salt pans of Namibia</p><p class="card-latin">Halite crust · Namib coast</p><p class="card-desc">The blinding white salt crust of Namibia's coastal pans, mineral and wind-scoured. A desert-meets-ocean terrain with no equivalent elsewhere.</p><p class="flip-hint">TAP TO LEARN MORE</p></div>
+          </div>
+          <div class="flip-back">
+            <div class="back-toprow"><div class="back-num-name"><span class="back-num">[14]</span><span class="back-name">Salt pans of Namibia</span></div><span class="back-dot" style="background:#8A8270"></span></div>
+            <div class="back-section"><p class="back-section-label">The question</p><p class="back-section-text">What does a desert that ends in an ocean smell like?</p></div>
+            <div class="back-section"><p class="back-section-label">Terrain material</p><p class="back-section-text">Namibian salt pans — vast crystalline flats where the Namib Desert meets the cold Atlantic, formed by evaporation over millennia. Mineral, saline, wind-exposed. A terrain that exists at the collision of two extremes.</p></div>
+            <div class="back-section"><p class="back-section-label">Smell note</p><p class="back-section-text">First contact: sharp salt, cold mineral, ozone. Warming: dry, chalky, faintly marine. Memory: a white horizon with no reference point. Emotional register: vastness, clarity, disorientation resolving into calm.</p></div>
+            <div class="back-footer"><div><p class="back-footer-label">Terrain</p><p class="back-footer-val">Namibia · Southern Africa</p></div><span class="back-arrow">↗</span></div>
+            <p class="flip-hint-back">TAP TO RETURN</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flip-card" onclick="this.classList.toggle('flipped')">
+        <div class="flip-inner">
+          <div class="flip-front">
+            <div class="card-photo" style="background:#E4E4E4"><div class="card-photo-placeholder"><svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="32" height="32" rx="1" stroke="#1A1714" stroke-width="0.8"/><circle cx="12" cy="14" r="4" stroke="#1A1714" stroke-width="0.7"/><path d="M2 26 L10 18 L18 24 L26 16 L34 22" stroke="#1A1714" stroke-width="0.7" fill="none"/></svg></div><span class="card-photo-label">WEST AFRICA · FOREST ZONE</span></div>
+            <div class="card-body"><div class="card-toprow"><span class="card-num">[15]</span><span class="card-dot" style="background:#6B4A1E"></span></div><p class="card-name">Calabash interior after palm wine</p><p class="card-latin">Lagenaria siceraria, fermented residue</p><p class="card-desc">The fermented, faintly sour interior of a calabash gourd after palm wine — a vessel material, not a drink. Rustic, alive, entirely unclaimed.</p><p class="flip-hint">TAP TO LEARN MORE</p></div>
+          </div>
+          <div class="flip-back">
+            <div class="back-toprow"><div class="back-num-name"><span class="back-num">[15]</span><span class="back-name">Calabash interior after palm wine</span></div><span class="back-dot" style="background:#6B4A1E"></span></div>
+            <div class="back-section"><p class="back-section-label">The question</p><p class="back-section-text">What does a vessel remember after everything inside it is gone?</p></div>
+            <div class="back-section"><p class="back-section-label">Terrain material</p><p class="back-section-text">Calabash gourd interior — the porous, fermentation-stained wall of the vessel used across West Africa to serve palm wine, carrying character built up over repeated use. Never separated from the drink it holds.</p></div>
+            <div class="back-section"><p class="back-section-label">Smell note</p><p class="back-section-text">First contact: fermented, faintly sour, woody. Settling: sweet decay, damp fibre, warm wood. Memory: a compound courtyard at dusk, a shared vessel passed hand to hand. Emotional register: conviviality, patience, shared ritual.</p></div>
+            <div class="back-footer"><div><p class="back-footer-label">Terrain</p><p class="back-footer-val">West Africa · Forest zone</p></div><span class="back-arrow">↗</span></div>
+            <p class="flip-hint-back">TAP TO RETURN</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flip-card" onclick="this.classList.toggle('flipped')">
+        <div class="flip-inner">
+          <div class="flip-front">
+            <div class="card-photo" style="background:#E4E4E4"><div class="card-photo-placeholder"><svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="32" height="32" rx="1" stroke="#1A1714" stroke-width="0.8"/><circle cx="12" cy="14" r="4" stroke="#1A1714" stroke-width="0.7"/><path d="M2 26 L10 18 L18 24 L26 16 L34 22" stroke="#1A1714" stroke-width="0.7" fill="none"/></svg></div><span class="card-photo-label">SAHEL · PASTORALIST CRAFT</span></div>
+            <div class="card-body"><div class="card-toprow"><span class="card-num">[16]</span><span class="card-dot" style="background:#4A3A22"></span></div><p class="card-name">Polished cow horn</p><p class="card-latin">Keratin, hand-polished · Sahel</p><p class="card-desc">Hand-polished cattle horn, worked and warmed by decades of use among Sahelian pastoralist communities — keratin as terrain, wealth, and inheritance.</p><p class="flip-hint">TAP TO LEARN MORE</p></div>
+          </div>
+          <div class="flip-back">
+            <div class="back-toprow"><div class="back-num-name"><span class="back-num">[16]</span><span class="back-name">Polished cow horn</span></div><span class="back-dot" style="background:#4A3A22"></span></div>
+            <div class="back-section"><p class="back-section-label">The question</p><p class="back-section-text">What does inherited wealth smell like after fifty years in the hand?</p></div>
+            <div class="back-section"><p class="back-section-label">Terrain material</p><p class="back-section-text">Polished cow horn — keratin vessels and ornaments central to Sahelian pastoralist culture, where cattle represent wealth passed through generations. Decades of handling leave a specific, warm, oil-and-keratin signature no synthetic can replicate.</p></div>
+            <div class="back-section"><p class="back-section-label">Smell note</p><p class="back-section-text">First contact: warm keratin, faint animal musk, oiled wood. Settling: leathery, waxy, subtly sweet. Memory: a herder's hand closing around a familiar object. Emotional register: inheritance, permanence, quiet pride.</p></div>
+            <div class="back-footer"><div><p class="back-footer-label">Terrain</p><p class="back-footer-val">Sahel · Pastoralist craft</p></div><span class="back-arrow">↗</span></div>
+            <p class="flip-hint-back">TAP TO RETURN</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- HOW TO SMELL (merged from standalone page) -->
+  <div class="hts-opening">
+    <span class="hts-opening-label">HOW TO SMELL · THE LANGUAGE OF SCENT</span>
+    <h2 class="hts-opening-title">The nose learns<br>what the eye<br><em>already knows.</em></h2>
+    <p class="hts-opening-body">Vision has a vocabulary that is centuries old. Scent does not. House of Terrain uses a four-part framework to document every material — because the language you bring to an encounter with a raw material determines what you are able to find there.</p>
+  </div>
+
+  <div class="hts-framework">
+    <div class="hts-term">
+      <div>
+        <span class="hts-term-num">I</span>
+        <p class="hts-term-name">First<br><em>contact.</em></p>
+        <p class="hts-term-technical">Top note · 0 – 30 minutes</p>
+      </div>
+      <div>
+        <p class="hts-term-body">The volatile molecules that reach the nose immediately — evanescent, often misleading. This is the material at its most defensive. It has not yet had time to open, to warm, to become itself. A nose trained to judge at first contact will miss most of what a material has to offer. The first register is recorded, but it is not the verdict.</p>
+        <div class="hts-term-example">
+          <span class="hts-term-example-label">FROM THE ARCHIVE — HYRACEUM</span>
+          First contact: animalic, leathery, faintly urinal. Sharper than expected. The material presents its least accommodating face. Hold.
+        </div>
+      </div>
+    </div>
+
+    <div class="hts-term">
+      <div>
+        <span class="hts-term-num">II</span>
+        <p class="hts-term-name">Warmed<br><em>wet.</em></p>
+        <p class="hts-term-technical">Heart note · 30 minutes – 4 hours</p>
+      </div>
+      <div>
+        <p class="hts-term-body">The material after skin chemistry and ambient heat have had time to work on it. This is the most honest register — the full-bodied, most complex phase, where the character of the raw ingredient is revealed rather than concealed. Great materials open here into something that could not have been predicted from first contact. The heart note is what the perfumer composes around.</p>
+        <div class="hts-term-example">
+          <span class="hts-term-example-label">FROM THE ARCHIVE — HYRACEUM</span>
+          Warmed: tobacco, leather, dried fruit — the animalic quality softening into something almost aristocratic. A material of extraordinary depth. The patience was correct.
+        </div>
+      </div>
+    </div>
+
+    <div class="hts-term">
+      <div>
+        <span class="hts-term-num">III</span>
+        <p class="hts-term-name"><em>Memory.</em></p>
+        <p class="hts-term-technical">Base note · 4 – 24 hours</p>
+      </div>
+      <div>
+        <p class="hts-term-body">The involuntary image or place the scent calls forward, unprompted. Not a metaphor chosen by the writer — a literal memory retrieved by the oldest circuitry in the brain. The limbic system processes scent before the cortex has the opportunity to intervene with language. The memory that arises is the truest register. It is what the base note leaves behind in the mind long after the material has faded from the skin.</p>
+        <div class="hts-term-example">
+          <span class="hts-term-example-label">FROM THE ARCHIVE — LATERITE SOIL AT NOON</span>
+          Memory: the ground before rain. A particular quality of stillness. The smell of a specific afternoon that had no occasion and no name.
+        </div>
+      </div>
+    </div>
+
+    <div class="hts-term">
+      <div>
+        <span class="hts-term-num">IV</span>
+        <p class="hts-term-name">Emotional<br><em>register.</em></p>
+        <p class="hts-term-technical">Sillage · the wake left behind</p>
+      </div>
+      <div>
+        <p class="hts-term-body">What the material produces in the body, not the nose. The quality of feeling — not named emotion, but the particular state the material calls forward. This is the register that separates perfumery from cosmetics. A great fragrance does not smell pleasant. It produces a condition — a readiness, a stillness, a specific quality of being present. The sillage is the trace this condition leaves in a room after its wearer has left.</p>
+        <div class="hts-term-example">
+          <span class="hts-term-example-label">FROM THE ARCHIVE — GRAINS OF SELIM</span>
+          Emotional register: communal warmth. The particular quality of a room where something important has been prepared. Grounding without weight.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hts-hot">
+    <span class="hts-hot-label">THE H.O.T. FRAMEWORK · HOUSE OF TERRAIN</span>
+    <div class="hts-hot-grid">
+      <div class="hts-hot-card">
+        <span class="hts-hot-card-label">TERRAIN MATERIAL</span>
+        <p class="hts-hot-card-title">The singular signature</p>
+        <p class="hts-hot-card-body">Every accord House of Terrain builds is anchored by a single raw material sourced from a specific terrain — one that cannot be found elsewhere, substituted, or synthesised without loss of character. This is the Terrain Material. It gives the accord its irreplaceable identity. The four registers above are used to document it before a single gram of anything else is weighed.</p>
+      </div>
+      <div class="hts-hot-card">
+        <span class="hts-hot-card-label">THE QUESTION</span>
+        <p class="hts-hot-card-title">The accord as answer</p>
+        <p class="hts-hot-card-body">Before composition begins, the terrain poses a question. What does time smell like? What does the ground hold that the air does not? What is the scent of knowledge passed through hands for centuries? The accord is not complete until it answers this question — without stating it, without explaining it. The question is for the perfumer. The answer is for whoever smells the finished work.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="hts-htu">
+    <div class="hts-htu-grid">
+      <div>
+        <span class="hts-opening-label" style="margin-bottom:0;">IN PRACTICE</span>
+        <h2 class="hts-htu-title">Approaching<br>a material for<br><em>the first time.</em></h2>
+      </div>
+      <div class="hts-htu-steps">
+        <div class="hts-htu-step"><span class="hts-htu-step-num">01</span><p class="hts-htu-step-text">Apply to the inner wrist or inner elbow — not the back of the hand, where the skin is too dry and too exposed to ambient air.</p></div>
+        <div class="hts-htu-step"><span class="hts-htu-step-num">02</span><p class="hts-htu-step-text">Wait ten seconds before the first inhale. The initial volatile molecules need a moment to settle. What you smell in the first two seconds is not the material.</p></div>
+        <div class="hts-htu-step"><span class="hts-htu-step-num">03</span><p class="hts-htu-step-text">Do not rub. Friction accelerates evaporation and collapses the material's development before it can begin. The skin is the medium. Let it work.</p></div>
+        <div class="hts-htu-step"><span class="hts-htu-step-num">04</span><p class="hts-htu-step-text">Note the first contact without deciding. Write a single phrase. Then put the material aside for thirty minutes and return to it.</p></div>
+        <div class="hts-htu-step"><span class="hts-htu-step-num">05</span><p class="hts-htu-step-text">At thirty minutes, note the heart. This is the material's character. Compare it to the first contact note. The difference between them is the material's range.</p></div>
+        <div class="hts-htu-step"><span class="hts-htu-step-num">06</span><p class="hts-htu-step-text">Do not sample more than two materials at a time. The nose adapts quickly to complexity and begins to confuse what it cannot distinguish. Two is enough for one session.</p></div>
+        <div class="hts-htu-step"><span class="hts-htu-step-num">07</span><p class="hts-htu-step-text">The memory register arrives without effort — an image, a place, an afternoon. When it comes, write it exactly as it appeared, without editing it toward poetry. The precision is the point.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hts-closing">
+    <blockquote class="hts-closing-quote">"Smell is a potent wizard that transports us across thousands of miles and all the years we have lived."</blockquote>
+    <p class="hts-closing-attr">HELEN KELLER</p>
+  </div>
+
+  <div class="research-note">
+    <span class="research-num">84</span>
+    <p class="research-text">Materials remaining in the research set. Field documentation continues. The archive grows with each encounter — each smell note written, each material encountered, each terrain coordinate added to the index.</p>
+  </div>
+
+  <footer>
+    <span class="footer-mark">HOUSE OF TERRAIN · LONDON</span>
+    <span class="footer-note">Est. 2026</span>
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  var nav = document.querySelector('nav');
+  var lastY = window.scrollY;
+  var ticking = false;
+  function onScroll(){
+    var y = window.scrollY;
+    if (y < 40) { nav.classList.remove('nav-hidden'); }
+    else if (y > lastY) { nav.classList.add('nav-hidden'); }
+    else { nav.classList.remove('nav-hidden'); }
+    lastY = y;
+    ticking = false;
+  }
+  window.addEventListener('scroll', function(){
+    if (!ticking) { window.requestAnimationFrame(onScroll); ticking = true; }
+  });
+  var burger = document.querySelector('.nav-burger');
+  var links = document.querySelector('.nav-links');
+  if (burger && links) {
+    burger.addEventListener('click', function(){
+      links.classList.toggle('open');
+      burger.classList.toggle('open');
+    });
+    links.querySelectorAll('a').forEach(function(a){
+      a.addEventListener('click', function(){
+        links.classList.remove('open');
+        burger.classList.remove('open');
+      });
+    });
+  }
+})();
+</script>
+</body>
+</html>

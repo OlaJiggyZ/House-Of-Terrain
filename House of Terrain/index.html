@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>House of Terrain — Founding Archive</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { background: #FFFFFF; color: #1A1714; font-family: 'DM Sans', sans-serif; font-weight: 300; }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 2rem 3rem;
+    background: transparent;
+    transition: transform 0.4s ease;
+  }
+  nav.nav-hidden { transform: translateY(-100%); }
+  .nav-mark { font-family: 'Cormorant Garamond', serif; font-size: 0.95rem; letter-spacing: 0.25em; color: #F2EDE6; font-weight: 300; text-decoration: none; }
+  .nav-links { display: flex; gap: 2.5rem; align-items: center; }
+  .nav-links a { font-size: 0.68rem; color: rgba(242,237,230,0.5); letter-spacing: 0.14em; text-decoration: none; cursor: pointer; transition: color 0.2s; }
+  .nav-links a:hover, .nav-links a.active { color: rgba(242,237,230,0.9); }
+  .nav-burger { display: none; flex-direction: column; gap: 5px; cursor: pointer; background: none; border: none; padding: 0.4rem; }
+  .nav-burger span { width: 20px; height: 1px; background: #F2EDE6; display: block; transition: transform 0.3s ease, opacity 0.3s ease; }
+  .nav-burger.open span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+  .nav-burger.open span:nth-child(2) { opacity: 0; }
+  .nav-burger.open span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+
+  /* HERO */
+  .hero {
+    position: relative; width: 100%; height: 100vh; min-height: 640px;
+    overflow: hidden; background: #1E1509;
+    display: flex; flex-direction: column; justify-content: flex-end;
+  }
+  .hero-visual { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .hero-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(to top, rgba(20,12,4,0.92) 0%, rgba(20,12,4,0.5) 40%, rgba(20,12,4,0.15) 100%);
+  }
+  .hero-content { position: relative; z-index: 2; padding: 3rem 3rem 3.5rem; }
+  .hero-tag { font-size: 0.6rem; color: rgba(242,237,230,0.35); letter-spacing: 0.28em; margin-bottom: 1.6rem; }
+  .hero-title { font-family: 'Cormorant Garamond', serif; font-size: clamp(3.2rem, 7vw, 6rem); font-weight: 300; line-height: 0.95; color: #F2EDE6; margin-bottom: 3rem; }
+  .hero-title em { font-style: italic; color: rgba(242,237,230,0.5); }
+  .hero-bottom { display: flex; justify-content: space-between; align-items: flex-end; border-top: 0.5px solid rgba(242,237,230,0.12); padding-top: 1.5rem; gap: 2rem; flex-wrap: wrap; }
+  .hero-sub { font-size: 0.78rem; color: rgba(242,237,230,0.4); max-width: 30ch; line-height: 1.8; }
+  .waitlist-wrap { display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem; }
+  .waitlist { display: flex; }
+  .waitlist input { background: transparent; border: 0.5px solid rgba(242,237,230,0.2); border-right: none; color: #F2EDE6; padding: 0.7rem 1rem; font-family: 'DM Sans', sans-serif; font-size: 0.75rem; font-weight: 300; width: 200px; outline: none; }
+  .waitlist input::placeholder { color: rgba(242,237,230,0.2); }
+  .waitlist button { background: transparent; border: 0.5px solid rgba(242,237,230,0.3); color: rgba(242,237,230,0.6); padding: 0.7rem 1.2rem; font-family: 'DM Sans', sans-serif; font-size: 0.7rem; font-weight: 300; letter-spacing: 0.1em; cursor: pointer; white-space: nowrap; transition: all 0.2s; }
+  .waitlist button:hover { border-color: #F2EDE6; color: #F2EDE6; }
+  #w-msg { font-size: 0.65rem; color: rgba(242,237,230,0.4); min-height: 1rem; }
+
+  /* BRAND STATEMENT */
+  .brand-statement {
+    padding: 6rem 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 180px;
+  }
+  .brand-statement p {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+    font-weight: 300;
+    line-height: 1.4;
+    color: #1A1714;
+    max-width: 22ch;
+  }
+  .brand-statement em { font-style: italic; color: #7A3020; }
+  .brand-blob {
+    width: 475px;
+    height: 575px;
+    max-width: 80vw;
+    flex-shrink: 0;
+    background: #EFEFEF;
+    border-radius: 58% 42% 63% 37% / 41% 44% 56% 59%;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .brand-blob svg { width: 60px; opacity: 0.22; }
+  @media (max-width: 700px) {
+    .brand-statement { flex-direction: column; align-items: flex-start; gap: 2rem; }
+    .brand-blob { width: 220px; height: 260px; }
+  }
+
+  /* FOUNDER STATEMENT */
+  .founder-statement { padding: 6rem 3rem; }
+  .founder-meta { text-align: center; margin-bottom: 3.5rem; }
+  .founder-label { font-size: 0.6rem; color: #A09288; letter-spacing: 0.22em; display: block; margin-bottom: 1rem; }
+  .founder-name { font-family: 'Cormorant Garamond', serif; font-size: 1.6rem; font-weight: 300; color: #1A1714; margin-bottom: 0.3rem; line-height: 1.2; }
+  .founder-role { font-size: 0.75rem; color: #A09288; }
+  .founder-break {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 0 0;
+    gap: 2.5rem;
+  }
+  .founder-break-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-weight: 300;
+    font-size: clamp(1.3rem, 2.8vw, 2rem);
+    line-height: 1.65;
+    color: #5A5248;
+    text-align: center;
+    max-width: 58ch;
+    margin: 0 auto;
+  }
+  .founder-break-image {
+    width: 200px; aspect-ratio: 3/4;
+    background: #EFEFEF;
+    border-radius: 2px;
+    overflow: hidden;
+    position: relative;
+  }
+  .founder-break-placeholder { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+  .founder-break-placeholder svg { width: 42px; opacity: 0.2; }
+  .founder-body { max-width: 60ch; margin: 1.5rem auto 0; }
+  .founder-body p { font-size: 0.88rem; color: #5A5248; line-height: 2; }
+  .founder-body p + p { margin-top: 1.4rem; }
+  @media (max-width: 700px) {
+    .founder-break-image { width: 150px; }
+    .founder-break-text { font-size: 1.1rem; }
+  }
+
+  /* SCENT LANGUAGE */
+  .scent-language { padding: 5rem 3rem; border-top: 0.5px solid #C4BAB0; border-bottom: 0.5px solid #C4BAB0; }
+  .scent-language-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 6rem; align-items: start; }
+  .scent-left {}
+  .scent-intro { font-size: 0.85rem; color: #6B6055; line-height: 1.9; margin-top: 1.5rem; max-width: 36ch; }
+  .scent-terms { display: flex; flex-direction: column; gap: 0; }
+  .scent-term { padding: 1.2rem 0; border-bottom: 0.5px solid #DDD6CC; }
+  .scent-term:first-child { border-top: 0.5px solid #DDD6CC; }
+  .scent-term-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.4rem; }
+  .scent-term-name { font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; font-weight: 400; color: #1A1714; }
+  .scent-term-origin { font-size: 0.62rem; color: #A09288; letter-spacing: 0.1em; }
+  .scent-term-def { font-size: 0.78rem; color: #6B6055; line-height: 1.75; }
+  @media (max-width: 900px) { .scent-language-grid { grid-template-columns: 1fr; gap: 3rem; } }
+
+  /* TERRAIN INDEX */
+  .terrain-index { background: #FFFFFF; padding: 5rem 3rem 6rem; }
+  .section-header { margin-bottom: 3rem; display: flex; justify-content: space-between; align-items: baseline; }
+  .section-label { font-size: 0.6rem; color: #A09288; letter-spacing: 0.22em; display: block; margin-bottom: 0.5rem; }
+  .section-title { font-family: 'Cormorant Garamond', serif; font-size: 2rem; font-weight: 300; color: #1A1714; }
+  .section-count { font-size: 0.68rem; color: #B0A89E; }
+
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+  }
+
+  /* FLIP CARDS — Aesop photo-top style */
+  .flip-card { height: 520px; perspective: 1200px; cursor: pointer; }
+  .flip-inner { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1); }
+  .flip-card.flipped .flip-inner { transform: rotateY(180deg); }
+  .flip-front, .flip-back { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; background: #EFEFEF; border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; }
+  .flip-back { transform: rotateY(180deg); padding: 1.5rem 1.4rem 1.4rem; }
+
+  /* FRONT — photo top, text below */
+  .card-photo {
+    width: 100%;
+    height: 200px;
+    flex-shrink: 0;
+    background: #EFEFEF;
+    position: relative;
+    overflow: hidden;
+  }
+  .card-photo-placeholder {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .card-photo-placeholder svg { width: 36px; opacity: 0.2; }
+  .card-photo-label {
+    position: absolute; bottom: 0.8rem; left: 0.9rem;
+    font-size: 0.55rem; color: #8A8078; letter-spacing: 0.14em;
+  }
+  .card-body { padding: 1.2rem 1.3rem 1.3rem; display: flex; flex-direction: column; flex: 1; }
+  .card-toprow { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.9rem; }
+  .card-num { font-size: 0.7rem; color: #8A8078; letter-spacing: 0.05em; font-weight: 400; }
+  .card-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 2px; }
+  .card-name { font-family: 'Cormorant Garamond', serif; font-size: 1.15rem; font-weight: 400; color: #1A1714; margin-bottom: 0.2rem; line-height: 1.2; }
+  .card-latin { font-size: 0.62rem; font-weight: 500; color: #7A3020; margin-bottom: 0.6rem; letter-spacing: 0.03em; }
+  .card-desc { font-size: 0.74rem; color: #5A5248; line-height: 1.75; flex: 1; }
+  .flip-hint { font-size: 0.55rem; color: #B0A89E; letter-spacing: 0.1em; text-align: right; margin-top: 0.5rem; }
+
+  .back-toprow { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 1.4rem; }
+  .back-num-name { display: flex; gap: 0.7rem; align-items: baseline; }
+  .back-num { font-size: 0.7rem; color: #8A8078; font-weight: 400; }
+  .back-name { font-size: 0.9rem; font-weight: 400; color: #1A1714; font-family: 'Cormorant Garamond', serif; }
+  .back-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+  .back-section { margin-bottom: 0.9rem; }
+  .back-section-label { font-size: 0.6rem; font-weight: 500; color: #A09288; letter-spacing: 0.1em; margin-bottom: 0.25rem; }
+  .back-section-text { font-size: 0.75rem; color: #5A5248; line-height: 1.75; }
+  .back-section:first-of-type .back-section-text { font-family: 'Cormorant Garamond', serif; font-size: 1rem; font-style: italic; color: #1A1714; line-height: 1.4; }
+  .back-footer { margin-top: auto; padding-top: 0.9rem; border-top: 0.5px solid #C8C0B6; display: flex; justify-content: space-between; align-items: baseline; }
+  .back-footer-label { font-size: 0.6rem; font-weight: 500; color: #1A1714; margin-bottom: 0.2rem; }
+  .back-footer-val { font-size: 0.74rem; color: #5A5248; }
+  .back-arrow { font-size: 0.9rem; color: #A09288; }
+  .flip-hint-back { font-size: 0.58rem; color: #B0A89E; letter-spacing: 0.1em; margin-top: 0.6rem; }
+
+  .ghost-card {
+    height: 520px; background: transparent;
+    border: 0.5px solid #C8C0B6; border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .ghost-card p { font-family: 'Cormorant Garamond', serif; font-size: 1rem; font-style: italic; color: #B0A89E; text-align: center; padding: 1rem; }
+
+  /* PILLARS */
+  .pillars { background: #FFFFFF; padding: 5rem 3rem; border-bottom: 0.5px solid #C4BAB0; }
+  .pillars-header { margin-bottom: 2.5rem; }
+  .pillars-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+  .pillar-card {
+    position: relative; border-radius: 14px; overflow: hidden;
+    aspect-ratio: 3/4; background: #EFEFEF;
+  }
+  .pillar-placeholder {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .pillar-placeholder svg { width: 48px; height: 48px; opacity: 0.2; }
+  .pillar-label {
+    position: absolute; top: 1rem; left: 1rem;
+    font-family: 'DM Sans', sans-serif; font-size: 0.8rem; font-weight: 300;
+    color: #1A1714; letter-spacing: 0.02em;
+  }
+
+  /* BOTTOM CTA */
+  .bottom-cta {
+    padding: 6rem 3rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6rem;
+    align-items: end;
+    border-bottom: 0.5px solid #C4BAB0;
+  }
+  .cta-left {}
+  .cta-label { font-size: 0.6rem; color: #A09288; letter-spacing: 0.22em; display: block; margin-bottom: 1.5rem; }
+  .cta-title { font-family: 'Cormorant Garamond', serif; font-size: clamp(1.8rem, 3vw, 2.6rem); font-weight: 300; line-height: 1.3; color: #1A1714; margin-bottom: 1.5rem; }
+  .cta-title em { font-style: italic; color: #7A3020; }
+  .cta-body { font-size: 0.85rem; color: #6B6055; line-height: 1.9; max-width: 44ch; }
+  .cta-right { display: flex; flex-direction: column; gap: 1rem; }
+  .cta-waitlist { display: flex; }
+  .cta-waitlist input { background: transparent; border: 0.5px solid #C4BAB0; border-right: none; color: #1A1714; padding: 0.8rem 1rem; font-family: 'DM Sans', sans-serif; font-size: 0.8rem; font-weight: 300; flex: 1; outline: none; transition: border-color 0.2s; }
+  .cta-waitlist input:focus { border-color: #8A8078; }
+  .cta-waitlist input::placeholder { color: #C4BAB0; }
+  .cta-waitlist button { background: #1A1714; border: 0.5px solid #1A1714; color: #F2EDE6; padding: 0.8rem 1.4rem; font-family: 'DM Sans', sans-serif; font-size: 0.75rem; font-weight: 300; letter-spacing: 0.1em; cursor: pointer; white-space: nowrap; transition: all 0.2s; }
+  .cta-waitlist button:hover { background: #3A2A1A; }
+  .cta-note { font-size: 0.68rem; color: #A09288; line-height: 1.6; }
+  #w-msg2 { font-size: 0.68rem; color: #7A3020; min-height: 1rem; }
+
+  /* FOOTER */
+  footer { padding: 2rem 3rem; display: flex; justify-content: space-between; align-items: baseline; }
+  .footer-mark { font-family: 'Cormorant Garamond', serif; font-size: 0.85rem; letter-spacing: 0.2em; color: #A09288; }
+  .footer-note { font-size: 0.62rem; color: #B8AFA6; }
+
+  @media (max-width: 1100px) {
+    .cards-grid { grid-template-columns: repeat(2, 1fr); }
+        .bottom-cta { grid-template-columns: 1fr; gap: 3rem; }
+  }
+  @media (max-width: 700px) {
+    nav { padding: 1.2rem 1.5rem; }
+    .nav-links { display: none; position: fixed; inset: 0; background: #FFFFFF; flex-direction: column; justify-content: center; align-items: center; gap: 2.2rem; z-index: 49; }
+    .nav-links.open { display: flex; }
+    .nav-links a { font-size: 1rem; color: #1A1714; }
+    .nav-burger { display: flex; z-index: 51; }
+    .hero-content { padding: 2rem 1.5rem 2.5rem; }
+    .hero-bottom { flex-direction: column; align-items: flex-start; }
+    .waitlist-wrap { align-items: flex-start; }
+    .brand-statement { padding: 4rem 1.5rem; }
+    .founder-statement { padding: 4rem 1.5rem; }
+    .terrain-index { padding: 3rem 1.5rem 4rem; }
+    .cards-grid { grid-template-columns: 1fr; }
+    .pillars { padding: 3rem 1.5rem; }
+    .pillars-grid { grid-template-columns: repeat(2, 1fr); }
+    .bottom-cta { padding: 4rem 1.5rem; }
+    footer { padding: 1.5rem; flex-direction: column; gap: 0.5rem; }
+  }
+
+  /* THE OBJECT */
+  .the-object { padding: 5rem 3rem; }
+  .object-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6rem; align-items: center; }
+  .object-image { aspect-ratio: 3/4; background: #EFEFEF; border-radius: 2px; position: relative; overflow: hidden; }
+  .object-image-placeholder { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; }
+  .object-image-placeholder svg { opacity: 0.2; width: 60px; }
+  .object-image-placeholder span { font-size: 0.6rem; color: #8A8078; letter-spacing: 0.15em; }
+  .object-edition { font-size: 0.6rem; color: #8B3A2A; letter-spacing: 0.22em; display: block; margin-bottom: 2rem; }
+  .object-title { font-family: 'Cormorant Garamond', serif; font-size: clamp(1.8rem, 3vw, 2.6rem); font-weight: 300; line-height: 1.3; color: #1A1714; margin-bottom: 1.5rem; }
+  .object-title em { font-style: italic; color: #7A3020; }
+  .object-body { font-size: 0.85rem; color: #6B6055; line-height: 1.95; }
+  .object-body p + p { margin-top: 1.2rem; }
+  .object-specs { margin-top: 2rem; display: flex; flex-direction: column; }
+  .object-spec { display: flex; justify-content: space-between; padding: 0.7rem 0; border-bottom: 0.5px solid #DDD6CC; }
+  .object-spec:first-child { border-top: 0.5px solid #DDD6CC; }
+  .object-spec-label { font-size: 0.62rem; font-weight: 500; color: #1A1714; letter-spacing: 0.06em; }
+  .object-spec-val { font-size: 0.72rem; color: #6B6055; }
+  @media (max-width: 900px) { .object-grid { grid-template-columns: 1fr; gap: 3rem; } }
+
+  /* IMAGE GALLERY (full-bleed) */
+  .image-gallery { width: 100%; }
+  .gallery-main { position: relative; width: 100%; height: 78vh; min-height: 480px; background: #EFEFEF; overflow: hidden; }
+  .gallery-slide { position: absolute; inset: 0; opacity: 0; transition: opacity 0.9s ease; }
+  .gallery-slide.active { opacity: 1; }
+  .gallery-main-placeholder { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+  .gallery-main-placeholder svg { width: 70px; opacity: 0.18; }
+  .gallery-main-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.15) 45%, rgba(255,255,255,0) 70%); display: flex; flex-direction: column; justify-content: flex-end; padding: 3rem; }
+  .gallery-main-label { font-size: 0.6rem; color: #8A8078; letter-spacing: 0.22em; margin-bottom: 0.8rem; }
+  .gallery-main-caption { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: clamp(1.2rem, 2.4vw, 1.7rem); color: #1A1714; font-weight: 300; max-width: 46ch; line-height: 1.4; }
+  .gallery-arrow {
+    position: absolute; top: 50%; transform: translateY(-50%); z-index: 5;
+    width: 42px; height: 42px; border-radius: 50%;
+    background: rgba(26,23,20,0.06); border: 0.5px solid rgba(26,23,20,0.2);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: background 0.25s ease;
+  }
+  .gallery-arrow:hover { background: rgba(26,23,20,0.12); }
+  .gallery-arrow svg { width: 9px; opacity: 0.85; }
+  .gallery-arrow.prev { left: 1.5rem; }
+  .gallery-arrow.next { right: 1.5rem; }
+  .gallery-strip { display: grid; grid-template-columns: repeat(6, 1fr); }
+  .gallery-thumb {
+    position: relative; aspect-ratio: 3/4; background: #EFEFEF; overflow: hidden;
+    border-right: 1px solid #FFFFFF; cursor: pointer;
+  }
+  .gallery-thumb:last-child { border-right: none; }
+  .gallery-thumb-placeholder { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+  .gallery-thumb-placeholder svg { width: 24px; opacity: 0.2; }
+  .gallery-thumb-label { position: absolute; bottom: 0.7rem; left: 0.8rem; font-size: 0.52rem; color: #6B6055; letter-spacing: 0.1em; }
+  @media (max-width: 900px) { .gallery-strip { grid-template-columns: repeat(3, 1fr); } .gallery-main { height: 55vh; } }
+  @media (max-width: 500px) { .gallery-strip { grid-template-columns: repeat(2, 1fr); } }
+
+  /* VIDEO PLACEHOLDER GRID (full-bleed, edge to edge) */
+  .video-grid-section { width: 100%; }
+  .video-grid-header { padding: 3rem 3rem 2rem; }
+  .video-grid { display: grid; grid-template-columns: repeat(4, 1fr); width: 100%; }
+  .video-tile { position: relative; aspect-ratio: 3/4; background: #EFEFEF; overflow: hidden; border-right: 1px solid #FFFFFF; }
+  .video-tile:last-child { border-right: none; }
+  .video-tile-placeholder { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; }
+  .video-tile-play { width: 34px; height: 34px; border-radius: 50%; border: 1px solid rgba(26,23,20,0.3); display: flex; align-items: center; justify-content: center; }
+  .video-tile-play svg { width: 10px; opacity: 0.4; }
+  .video-tile-cat { position: absolute; top: 1rem; left: 1rem; font-size: 0.55rem; color: #8A8078; letter-spacing: 0.14em; }
+  .video-tile-label { font-size: 0.6rem; color: #8A8078; letter-spacing: 0.1em; text-align: center; }
+  @media (max-width: 900px) { .video-grid { grid-template-columns: repeat(2, 1fr); } }
+  @keyframes phPulse { 0%, 100% { opacity: 0.15; } 50% { opacity: 0.34; } }
+  @keyframes phScale { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+  .brand-blob svg, .founder-break-placeholder svg, .card-photo-placeholder svg,
+  .pillar-placeholder svg, .object-image-placeholder svg,
+  .gallery-main-placeholder svg, .gallery-thumb-placeholder svg { animation: phPulse 3.4s ease-in-out infinite; }
+  .video-tile-play { animation: phScale 2.6s ease-in-out infinite; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="salt-and-red.html" class="nav-mark">HOUSE OF TERRAIN</a>
+  <div class="nav-links">
+    <a href="about.html">The House</a>
+    <a href="terrain-index.html">Archive</a>
+    <a href="collections.html">Collections</a>
+  </div>
+  <button class="nav-burger" aria-label="Menu"><span></span><span></span><span></span></button>
+</nav>
+
+<!-- 1. HERO -->
+<section class="hero">
+  <svg class="hero-visual" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <radialGradient id="rg1" cx="60%" cy="38%" r="65%">
+        <stop offset="0%" stop-color="#6B3A14"/>
+        <stop offset="45%" stop-color="#3A1E08"/>
+        <stop offset="100%" stop-color="#100800"/>
+      </radialGradient>
+      <radialGradient id="rg2" cx="20%" cy="70%" r="50%">
+        <stop offset="0%" stop-color="#8B4A1A" stop-opacity="0.4"/>
+        <stop offset="100%" stop-color="#100800" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+    <rect width="1440" height="900" fill="url(#rg1)"/>
+    <rect width="1440" height="900" fill="url(#rg2)"/>
+    <g opacity="0.08" stroke="#D4A070" stroke-width="0.5" fill="none">
+      <path d="M0,500 Q200,460 400,490 Q600,520 800,480 Q1000,440 1200,470 Q1350,490 1440,460"/>
+      <path d="M0,540 Q250,505 450,530 Q650,555 850,518 Q1050,480 1250,510 Q1380,528 1440,500"/>
+      <path d="M0,580 Q300,548 500,570 Q700,592 900,558 Q1100,524 1300,552 Q1400,565 1440,545"/>
+      <path d="M0,620 Q350,592 550,612 Q750,632 950,598 Q1150,564 1350,594 Q1420,608 1440,592"/>
+      <path d="M0,460 Q180,430 360,452 Q540,474 720,445 Q900,416 1080,438 Q1260,460 1440,430"/>
+    </g>
+    <g opacity="0.1" fill="#D4A070">
+      <circle cx="320" cy="280" r="1.2"/><circle cx="580" cy="190" r="0.8"/>
+      <circle cx="840" cy="240" r="1.5"/><circle cx="1100" cy="200" r="1"/><circle cx="720" cy="350" r="1.2"/>
+    </g>
+  </svg>
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <p class="hero-tag">FOUNDING ARCHIVE &nbsp;·&nbsp; DROP 01 &nbsp;·&nbsp; LONDON 2026</p>
+    <h1 class="hero-title">Terrain<br>as parfum.</h1>
+    <div class="hero-bottom">
+      <p class="hero-sub">House of Terrain · London · Est. 2026</p>
+    </div>
+  </div>
+</section>
+
+<!-- 2. BRAND STATEMENT -->
+<div class="brand-statement">
+  <p>Certain locations yield materials found nowhere else. <em>House of Terrain builds around them.</em></p>
+  <div class="brand-blob">
+    <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="32" height="32" rx="1" stroke="#1A1714" stroke-width="0.6"/><circle cx="12" cy="14" r="4" stroke="#1A1714" stroke-width="0.6"/><path d="M2 26 L10 18 L18 24 L26 16 L34 22" stroke="#1A1714" stroke-width="0.6" fill="none"/></svg>
+  </div>
+</div>
+
+<!-- 3. IN MOTION (VIDEO PLACEHOLDERS) -->
+<div class="video-grid-section">
+  <div class="video-grid-header">
+    <span class="section-label">IN MOTION</span>
+    <h2 class="section-title">Terrain &amp; parfum, filmed.</h2>
+  </div>
+  <div class="video-grid">
+    <div class="video-tile">
+      <span class="video-tile-cat">TERRAIN</span>
+      <div class="video-tile-placeholder">
+        <div class="video-tile-play"><svg viewBox="0 0 10 12" fill="#1A1714" xmlns="http://www.w3.org/2000/svg"><path d="M0 0 L10 6 L0 12 Z"/></svg></div>
+        <span class="video-tile-label">FIELD FOOTAGE<br>VIDEO PENDING</span>
+      </div>
+    </div>
+    <div class="video-tile">
+      <span class="video-tile-cat">TERRAIN</span>
+      <div class="video-tile-placeholder">
+        <div class="video-tile-play"><svg viewBox="0 0 10 12" fill="#1A1714" xmlns="http://www.w3.org/2000/svg"><path d="M0 0 L10 6 L0 12 Z"/></svg></div>
+        <span class="video-tile-label">MATERIAL PROCESS<br>VIDEO PENDING</span>
+      </div>
+    </div>
+    <div class="video-tile">
+      <span class="video-tile-cat">PARFUM</span>
+      <div class="video-tile-placeholder">
+        <div class="video-tile-play"><svg viewBox="0 0 10 12" fill="#1A1714" xmlns="http://www.w3.org/2000/svg"><path d="M0 0 L10 6 L0 12 Z"/></svg></div>
+        <span class="video-tile-label">ACCORD BUILDING<br>VIDEO PENDING</span>
+      </div>
+    </div>
+    <div class="video-tile">
+      <span class="video-tile-cat">PARFUM</span>
+      <div class="video-tile-placeholder">
+        <div class="video-tile-play"><svg viewBox="0 0 10 12" fill="#1A1714" xmlns="http://www.w3.org/2000/svg"><path d="M0 0 L10 6 L0 12 Z"/></svg></div>
+        <span class="video-tile-label">THE OBJECT<br>VIDEO PENDING</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 4. THE FIRST EDITION (OBJECT SECTION) -->
+
+<div class="the-object">
+  <div class="object-grid">
+    <div class="object-image">
+      <div class="object-image-placeholder">
+        <svg viewBox="0 0 60 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="8" y="4" width="44" height="58" rx="1" stroke="#1A1714" stroke-width="0.8"/>
+          <rect x="14" y="10" width="32" height="40" rx="1" stroke="#1A1714" stroke-width="0.5" opacity="0.5"/>
+          <line x1="18" y1="56" x2="42" y2="56" stroke="#1A1714" stroke-width="0.6" opacity="0.4"/>
+          <line x1="22" y1="60" x2="38" y2="60" stroke="#1A1714" stroke-width="0.6" opacity="0.4"/>
+          <line x1="8" y1="68" x2="52" y2="68" stroke="#1A1714" stroke-width="0.4" opacity="0.3"/>
+        </svg>
+        <span>PHOTOGRAPH PENDING</span>
+      </div>
+    </div>
+    <div class="object-right">
+      <span class="object-edition">THE FIRST EDITION · 2026</span>
+      <h2 class="object-title">The archive<br><em>in your hand.</em></h2>
+      <div class="object-body">
+        <p>Every material House of Terrain documents produces a physical edition. Not packaging. Not a sample. An object — considered in the same way a watchmaker considers a case, or a winemaker considers a bottle.</p>
+        <p>The first edition is a strip of cotton rag paper, hand-torn, dipped in the founding accord, sealed in a glassine specimen envelope. The envelope is addressed. The paper carries a handwritten smell note. It is designed to sit on a dresser, open over days, and be remembered.</p>
+        <p>The object is the first impression of the house.</p>
+      </div>
+      <div class="object-specs">
+        <div class="object-spec"><span class="object-spec-label">Material</span><span class="object-spec-val">Cotton rag paper, 300gsm · hand-torn</span></div>
+        <div class="object-spec"><span class="object-spec-label">Vessel</span><span class="object-spec-val">Glassine specimen envelope · archival grade</span></div>
+        <div class="object-spec"><span class="object-spec-label">Inscription</span><span class="object-spec-val">Handwritten smell note · first-person present tense</span></div>
+        <div class="object-spec"><span class="object-spec-label">Longevity</span><span class="object-spec-val">3–7 days on cotton · longer sealed</span></div>
+        <div class="object-spec"><span class="object-spec-label">Edition</span><span class="object-spec-val">Drop 01 · December 2026 · London only</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 5. IMAGE GALLERY -->
+<div class="image-gallery">
+  <div class="gallery-main" id="gallery-main">
+    <div class="gallery-slide active" data-slide="0">
+      <div class="gallery-main-placeholder"><svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="56" height="56" rx="1" stroke="#1A1714" stroke-width="0.6"/><circle cx="22" cy="22" r="6" stroke="#1A1714" stroke-width="0.6"/><path d="M2 44 L18 30 L30 40 L44 26 L58 38" stroke="#1A1714" stroke-width="0.6" fill="none"/></svg></div>
+      <div class="gallery-main-overlay"><span class="gallery-main-label">FIELD PHOTOGRAPHY · MARKET</span><p class="gallery-main-caption">Dalston and Shepherd's Bush — raw materials sourced and documented at the stall.</p></div>
+    </div>
+    <div class="gallery-slide" data-slide="1">
+      <div class="gallery-main-placeholder"><svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="56" height="56" rx="1" stroke="#1A1714" stroke-width="0.6"/><circle cx="22" cy="22" r="6" stroke="#1A1714" stroke-width="0.6"/><path d="M2 44 L18 30 L30 40 L44 26 L58 38" stroke="#1A1714" stroke-width="0.6" fill="none"/></svg></div>
+      <div class="gallery-main-overlay"><span class="gallery-main-label">FIELD PHOTOGRAPHY · ARTEFACTS</span><p class="gallery-main-caption">Mason & Fifth — natural jars and materials suited to the archive's visual language.</p></div>
+    </div>
+    <div class="gallery-slide" data-slide="2">
+      <div class="gallery-main-placeholder"><svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="56" height="56" rx="1" stroke="#1A1714" stroke-width="0.6"/><circle cx="22" cy="22" r="6" stroke="#1A1714" stroke-width="0.6"/><path d="M2 44 L18 30 L30 40 L44 26 L58 38" stroke="#1A1714" stroke-width="0.6" fill="none"/></svg></div>
+      <div class="gallery-main-overlay"><span class="gallery-main-label">FIELD PHOTOGRAPHY · MATERIALS</span><p class="gallery-main-caption">The raw material archive — sixteen materials documented so far, eighty-four to go.</p></div>
+    </div>
+    <div class="gallery-slide" data-slide="3">
+      <div class="gallery-main-placeholder"><svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="56" height="56" rx="1" stroke="#1A1714" stroke-width="0.6"/><circle cx="22" cy="22" r="6" stroke="#1A1714" stroke-width="0.6"/><path d="M2 44 L18 30 L30 40 L44 26 L58 38" stroke="#1A1714" stroke-width="0.6" fill="none"/></svg></div>
+      <div class="gallery-main-overlay"><span class="gallery-main-label">FIELD PHOTOGRAPHY · PROCESS</span><p class="gallery-main-caption">Maceration, dilution, the smell-note journal — the work behind each accord.</p></div>
+    </div>
+    <div class="gallery-slide" data-slide="4">
+      <div class="gallery-main-placeholder"><svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="56" height="56" rx="1" stroke="#1A1714" stroke-width="0.6"/><circle cx="22" cy="22" r="6" stroke="#1A1714" stroke-width="0.6"/><path d="M2 44 L18 30 L30 40 L44 26 L58 38" stroke="#1A1714" stroke-width="0.6" fill="none"/></svg></div>
+      <div class="gallery-main-overlay"><span class="gallery-main-label">FIELD PHOTOGRAPHY · FOUNDER</span><p class="gallery-main-caption">Hands, jars, a workspace — the founder documentary, shot for prospect investors.</p></div>
+    </div>
+    <div class="gallery-slide" data-slide="5">
+      <div class="gallery-main-placeholder"><svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="56" height="56" rx="1" stroke="#1A1714" stroke-width="0.6"/><circle cx="22" cy="22" r="6" stroke="#1A1714" stroke-width="0.6"/><path d="M2 44 L18 30 L30 40 L44 26 L58 38" stroke="#1A1714" stroke-width="0.6" fill="none"/></svg></div>
+      <div class="gallery-main-overlay"><span class="gallery-main-label">FIELD PHOTOGRAPHY · ARCHIVE</span><p class="gallery-main-caption">Smell notes, field documents, locked accords — the founding archive, dated and kept.</p></div>
+    </div>
+    <button class="gallery-arrow prev" aria-label="Previous"><svg viewBox="0 0 10 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 1 L2 8 L8 15" stroke="#1A1714" stroke-width="1.4" fill="none"/></svg></button>
+    <button class="gallery-arrow next" aria-label="Next"><svg viewBox="0 0 10 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 1 L8 8 L2 15" stroke="#1A1714" stroke-width="1.4" fill="none"/></svg></button>
+  </div>
+  <div class="gallery-strip">
+    <div class="gallery-thumb active" data-slide="0"><div class="gallery-thumb-placeholder"><svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="32" height="32" rx="1" stroke="#1A1714" stroke-width="0.6"/><circle cx="12" cy="14" r="4" stroke="#1A1714" stroke-width="0.6"/><path d="M2 26 L10 18 L18 24 L26 16 L34 22" stroke="#1A1714" stroke-width="0.6" fill="none"/></svg></div><span class="gallery-thumb-label">MARKET</span></div>
+    <div class="gallery-thumb" data-slide="1"><div class="gallery-thumb-placeholder"><svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="32" height="32" rx="1" stroke="#1A1714" stroke-width="0.6"/><circle cx="12" cy="14" r="4" stroke="#1A1714" stroke-width="0.6"/><path d="M2 26 L10 18 L18 24 L26 16 L34 22" stroke="#1A1714" stroke-width="0.6" fill="none"/></svg></div><span class="gallery-thumb-label">ARTEFACTS</span></div>
+    <div class="gallery-thumb" data-slide="2"><div class="gallery-thumb-placeholder"><svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="32" height="32" rx="1" stroke="#1A1714" stroke-width="0.6"/><circle cx="12" cy="14" r="4" stroke="#1A1714" stroke-width="0.6"/><path d="M2 26 L10 18 L18 24 L26 16 L34 22" stroke="#1A1714" stroke-width="0.6" fill="none"/></svg></div><span class="gallery-thumb-label">MATERIALS</span></div>
+    <div class="gallery-thumb" data-slide="3"><div class="gallery-thumb-placeholder"><svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="32" height="32" rx="1" stroke="#1A1714" stroke-width="0.6"/><circle cx="12" cy="14" r="4" stroke="#1A1714" stroke-width="0.6"/><path d="M2 26 L10 18 L18 24 L26 16 L34 22" stroke="#1A1714" stroke-width="0.6" fill="none"/></svg></div><span class="gallery-thumb-label">PROCESS</span></div>
+    <div class="gallery-thumb" data-slide="4"><div class="gallery-thumb-placeholder"><svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="32" height="32" rx="1" stroke="#1A1714" stroke-width="0.6"/><circle cx="12" cy="14" r="4" stroke="#1A1714" stroke-width="0.6"/><path d="M2 26 L10 18 L18 24 L26 16 L34 22" stroke="#1A1714" stroke-width="0.6" fill="none"/></svg></div><span class="gallery-thumb-label">FOUNDER</span></div>
+    <div class="gallery-thumb" data-slide="5"><div class="gallery-thumb-placeholder"><svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="32" height="32" rx="1" stroke="#1A1714" stroke-width="0.6"/><circle cx="12" cy="14" r="4" stroke="#1A1714" stroke-width="0.6"/><path d="M2 26 L10 18 L18 24 L26 16 L34 22" stroke="#1A1714" stroke-width="0.6" fill="none"/></svg></div><span class="gallery-thumb-label">ARCHIVE</span></div>
+  </div>
+</div>
+
+<!-- 6. TERRAIN INDEX -->
+<div class="terrain-index">
+  <div class="section-header">
+    <div>
+      <span class="section-label">THE ARCHIVE · FIELD DOCUMENTS</span>
+      <h2 class="section-title">Terrain Index</h2>
+    </div>
+    <span class="section-count">8 of 100 materials</span>
+  </div>
+
+  <div class="cards-grid">
+
+    <div class="flip-card" onclick="this.classList.toggle('flipped')">
+      <div class="flip-inner">
+        <div class="flip-front">
+          <div class="card-photo" style="background:#E4E4E4">
+            <div class="card-photo-placeholder">
+              <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="32" height="32" rx="1" stroke="#1A1714" stroke-width="0.8"/><circle cx="12" cy="14" r="4" stroke="#1A1714" stroke-width="0.7"/><path d="M2 26 L10 18 L18 24 L26 16 L34 22" stroke="#1A1714" stroke-width="0.7" fill="none"/></svg>
+            </div>
+            <span class="card-photo-label">EAST AFRICA · ROCKY OUTCROPS</span>
+          </div>
+          <div class="card-body">
+            <div class="card-toprow"><span class="card-num">[01]</span><span class="card-dot" style="background:#5C3A28"></span></div>
+            <p class="card-name">Hyraceum</p>
+            <p class="card-latin">Africa stone · East Africa</p>
+            <p class="card-desc">Fossilised excrement of the rock hyrax — aged over centuries in East African rock outcrops into a resinous, animalic material of extraordinary complexity. Terrain, hardened by time.</p>
+            
+            <p class="flip-hint">TAP TO LEARN MORE</p>
+          </div>
+        </div>
+        <div class="flip-back">
+          <div class="back-toprow"><div class="back-num-name"><span class="back-num">[01]</span><span class="back-name">Hyraceum</span></div><span class="back-dot" style="background:#5C3A28"></span></div>
+          <div class="back-section"><p class="back-section-label">The question</p><p class="back-section-text">What does time smell like?</p></div>
+          <div class="back-section"><p class="back-section-label">Terrain material</p><p class="back-section-text">Hyraceum — fossilised hyrax resin, aged over centuries in East African rock outcrops. Found nowhere else on earth. The singular terrain signature this archive starts with.</p></div>
+          <div class="back-section"><p class="back-section-label">Smell note</p><p class="back-section-text">First contact: animalic, leathery, faintly urinal. Warmed: tobacco, castoreum, dried fruit. Memory: old stone in warm sun. Emotional register: ancestral, uncanny, irreplaceable.</p></div>
+          <div class="back-footer"><div><p class="back-footer-label">Terrain</p><p class="back-footer-val">East Africa · Rocky outcrops</p></div><span class="back-arrow">↗</span></div>
+          <p class="flip-hint-back">TAP TO RETURN</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="flip-card" onclick="this.classList.toggle('flipped')">
+      <div class="flip-inner">
+        <div class="flip-front">
+          <div class="card-photo" style="background:#E4E4E4">
+            <div class="card-photo-placeholder">
+              <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="32" height="32" rx="1" stroke="#1A1714" stroke-width="0.8"/><circle cx="12" cy="14" r="4" stroke="#1A1714" stroke-width="0.7"/><path d="M2 26 L10 18 L18 24 L26 16 L34 22" stroke="#1A1714" stroke-width="0.7" fill="none"/></svg>
+            </div>
+            <span class="card-photo-label">SAHEL · SAVANNAH WOODLAND</span>
+          </div>
+          <div class="card-body">
+            <div class="card-toprow"><span class="card-num">[02]</span><span class="card-dot" style="background:#6B5A3A"></span></div>
+            <p class="card-name">Baobab bark after rain</p>
+            <p class="card-latin">Adansonia digitata · Sahel</p>
+            <p class="card-desc">Not the fruit. Not the oil. The bark itself, after rainfall — woody, mineral, faintly green. A register entirely unclaimed by perfumery.</p>
+            
+            <p class="flip-hint">TAP TO LEARN MORE</p>
+          </div>
+        </div>
+        <div class="flip-back">
+          <div class="back-toprow"><div class="back-num-name"><span class="back-num">[02]</span><span class="back-name">Baobab bark after rain</span></div><span class="back-dot" style="background:#6B5A3A"></span></div>
+          <div class="back-section"><p class="back-section-label">The question</p><p class="back-section-text">What does a thousand years smell like?</p></div>
+          <div class="back-section"><p class="back-section-label">Terrain material</p><p class="back-section-text">Baobab bark after rain — not the fruit, not the oil. The tree itself, after the first rain of the season. A register nobody in perfumery has touched.</p></div>
+          <div class="back-section"><p class="back-section-label">Smell note</p><p class="back-section-text">First contact: dry, chalky, ancient wood. Warmed by rain: green, mineral, faintly sweet. Memory: stepping under a baobab after a dry-season shower. Emotional register: longevity, rootedness, quiet power.</p></div>
+          <div class="back-footer"><div><p class="back-footer-label">Terrain</p><p class="back-footer-val">Sahel · Savannah woodland</p></div><span class="back-arrow">↗</span></div>
+          <p class="flip-hint-back">TAP TO RETURN</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="flip-card" onclick="this.classList.toggle('flipped')">
+      <div class="flip-inner">
+        <div class="flip-front">
+          <div class="card-photo" style="background:#E4E4E4">
+            <div class="card-photo-placeholder">
+              <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="32" height="32" rx="1" stroke="#1A1714" stroke-width="0.8"/><circle cx="12" cy="14" r="4" stroke="#1A1714" stroke-width="0.7"/><path d="M2 26 L10 18 L18 24 L26 16 L34 22" stroke="#1A1714" stroke-width="0.7" fill="none"/></svg>
+            </div>
+            <span class="card-photo-label">WEST AFRICA · FOREST ZONE</span>
+          </div>
+          <div class="card-body">
+            <div class="card-toprow"><span class="card-num">[03]</span><span class="card-dot" style="background:#4A3828"></span></div>
+            <p class="card-name">Grains of Selim</p>
+            <p class="card-latin">Xylopia aethiopica · Nigeria</p>
+            <p class="card-desc">A spice used for centuries in ritual and cooking across the forest zone. Smoked, it yields a warm, woody, faintly medicinal note. One of the most characterful raw materials in the archive.</p>
+            
+            <p class="flip-hint">TAP TO LEARN MORE</p>
+          </div>
+        </div>
+        <div class="flip-back">
+          <div class="back-toprow"><div class="back-num-name"><span class="back-num">[03]</span><span class="back-name">Grains of Selim</span></div><span class="back-dot" style="background:#4A3828"></span></div>
+          <div class="back-section"><p class="back-section-label">The question</p><p class="back-section-text">What spice has cooked every meal on this continent — and has no perfume house?</p></div>
+          <div class="back-section"><p class="back-section-label">Terrain material</p><p class="back-section-text">Grains of Selim (uda) — used across West and Central Africa for two thousand years in ritual, medicine, and cooking. A spice of extraordinary character that fine perfumery has barely touched.</p></div>
+          <div class="back-section"><p class="back-section-label">Smell note</p><p class="back-section-text">First contact: warm, resinous, pepper-adjacent. Smoked: woody, camphoraceous, dry. Memory: an open fire, a clay pot, a kitchen that has cooked for generations. Emotional register: communal, ancient, grounding.</p></div>
+          <div class="back-footer"><div><p class="back-footer-label">Terrain</p><p class="back-footer-val">West Africa · Forest zone</p></div><span class="back-arrow">↗</span></div>
+          <p class="flip-hint-back">TAP TO RETURN</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="flip-card" onclick="this.classList.toggle('flipped')">
+      <div class="flip-inner">
+        <div class="flip-front">
+          <div class="card-photo" style="background:#E4E4E4">
+            <div class="card-photo-placeholder">
+              <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="32" height="32" rx="1" stroke="#1A1714" stroke-width="0.8"/><circle cx="12" cy="14" r="4" stroke="#1A1714" stroke-width="0.7"/><path d="M2 26 L10 18 L18 24 L26 16 L34 22" stroke="#1A1714" stroke-width="0.7" fill="none"/></svg>
+            </div>
+            <span class="card-photo-label">SAHEL · SUB-SAHARAN TROPICS</span>
+          </div>
+          <div class="card-body">
+            <div class="card-toprow"><span class="card-num">[04]</span><span class="card-dot" style="background:#8B3A2A"></span></div>
+            <p class="card-name">Laterite soil at noon</p>
+            <p class="card-latin">Ferralitic earth · Sahel</p>
+            <p class="card-desc">The red iron-rich earth of the Sahel at peak heat. Dry, mineral, faintly metallic. Formed over millennia of tropical weathering. The ground beneath every road, every market, every compound.</p>
+            
+            <p class="flip-hint">TAP TO LEARN MORE</p>
+          </div>
+        </div>
+        <div class="flip-back">
+          <div class="back-toprow"><div class="back-num-name"><span class="back-num">[04]</span><span class="back-name">Laterite soil at noon</span></div><span class="back-dot" style="background:#8B3A2A"></span></div>
+          <div class="back-section"><p class="back-section-label">The question</p><p class="back-section-text">What does the ground smell like — not the landscape, the actual earth?</p></div>
+          <div class="back-section"><p class="back-section-label">Terrain material</p><p class="back-section-text">Laterite — the dominant red iron-rich soil of the sub-Saharan tropics, formed over millennia of weathering. One of the world's most distinctive terrains. One of its least explored olfactory signatures.</p></div>
+          <div class="back-section"><p class="back-section-label">Smell note</p><p class="back-section-text">First contact: dry, mineral, iron. At noon heat: faintly metallic, warm, arid. Memory: the ground before rain. Emotional register: rootedness, heat, the clarity of stillness.</p></div>
+          <div class="back-footer"><div><p class="back-footer-label">Terrain</p><p class="back-footer-val">Nigeria · Sub-Saharan Africa</p></div><span class="back-arrow">↗</span></div>
+          <p class="flip-hint-back">TAP TO RETURN</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="flip-card" onclick="this.classList.toggle('flipped')">
+      <div class="flip-inner">
+        <div class="flip-front">
+          <div class="card-photo" style="background:#E4E4E4">
+            <div class="card-photo-placeholder">
+              <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="32" height="32" rx="1" stroke="#1A1714" stroke-width="0.8"/><circle cx="12" cy="14" r="4" stroke="#1A1714" stroke-width="0.7"/><path d="M2 26 L10 18 L18 24 L26 16 L34 22" stroke="#1A1714" stroke-width="0.7" fill="none"/></svg>
+            </div>
+            <span class="card-photo-label">SOMALIA · HORN OF AFRICA</span>
+          </div>
+          <div class="card-body">
+            <div class="card-toprow"><span class="card-num">[05]</span><span class="card-dot" style="background:#5C4020"></span></div>
+            <p class="card-name">Opoponax resin</p>
+            <p class="card-latin">Commiphora guidottii · Somalia</p>
+            <p class="card-desc">A myrrh relative from the Horn of Africa — balsamic, spiced, ancient. Traded along incense routes for three thousand years. One of the great resinous materials of the terrain archive.</p>
+            
+            <p class="flip-hint">TAP TO LEARN MORE</p>
+          </div>
+        </div>
+        <div class="flip-back">
+          <div class="back-toprow"><div class="back-num-name"><span class="back-num">[05]</span><span class="back-name">Opoponax resin</span></div><span class="back-dot" style="background:#5C4020"></span></div>
+          <div class="back-section"><p class="back-section-label">The question</p><p class="back-section-text">What does three thousand years of trade smell like — when nobody bothered to name it?</p></div>
+          <div class="back-section"><p class="back-section-label">Terrain material</p><p class="back-section-text">Opoponax — harvested in Somalia and the Horn of Africa for three millennia. Used in Egyptian kyphi and along ancient incense routes. A material of immense history and almost no contemporary presence in fine perfumery.</p></div>
+          <div class="back-section"><p class="back-section-label">Smell note</p><p class="back-section-text">First contact: sweet resin, faintly vanilla, caramel warmth. Warmed: toffee, labdanum-adjacent, honeyed smoke. Memory: incense cooling after a ceremony. Emotional register: sacred, warm, enduring.</p></div>
+          <div class="back-footer"><div><p class="back-footer-label">Terrain</p><p class="back-footer-val">Somalia · Horn of Africa</p></div><span class="back-arrow">↗</span></div>
+          <p class="flip-hint-back">TAP TO RETURN</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="flip-card" onclick="this.classList.toggle('flipped')">
+      <div class="flip-inner">
+        <div class="flip-front">
+          <div class="card-photo" style="background:#E4E4E4">
+            <div class="card-photo-placeholder">
+              <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="32" height="32" rx="1" stroke="#1A1714" stroke-width="0.8"/><circle cx="12" cy="14" r="4" stroke="#1A1714" stroke-width="0.7"/><path d="M2 26 L10 18 L18 24 L26 16 L34 22" stroke="#1A1714" stroke-width="0.7" fill="none"/></svg>
+            </div>
+            <span class="card-photo-label">MOROCCO · ATLAS MOUNTAINS</span>
+          </div>
+          <div class="card-body">
+            <div class="card-toprow"><span class="card-num">[06]</span><span class="card-dot" style="background:#7A6040"></span></div>
+            <p class="card-name">Sandarac</p>
+            <p class="card-latin">Tetraclinis articulata · Atlas Mountains</p>
+            <p class="card-desc">Resin from the Tetraclinis Articulata — a tree native to Morocco's Atlas Mountains. Translucent chips, warm, frankincense-adjacent. One of the oldest resin traditions in the world.</p>
+            
+            <p class="flip-hint">TAP TO LEARN MORE</p>
+          </div>
+        </div>
+        <div class="flip-back">
+          <div class="back-toprow"><div class="back-num-name"><span class="back-num">[06]</span><span class="back-name">Sandarac</span></div><span class="back-dot" style="background:#7A6040"></span></div>
+          <div class="back-section"><p class="back-section-label">The question</p><p class="back-section-text">What is the forgotten signature of North Africa?</p></div>
+          <div class="back-section"><p class="back-section-label">Terrain material</p><p class="back-section-text">Sandarac — resin of the Tetraclinis Articulata, an endangered conifer native to Morocco's Atlas Mountains. Translucent chips, warm, frankincense-adjacent. Almost no modern perfumer has used it.</p></div>
+          <div class="back-section"><p class="back-section-label">Smell note</p><p class="back-section-text">First contact: bright, slightly citric, coniferous. Warmed: frankincense-like, powdery, dry. Memory: a mountain morning in Morocco, resin warming on bark. Emotional register: clarity, elevation, ancient quiet.</p></div>
+          <div class="back-footer"><div><p class="back-footer-label">Terrain</p><p class="back-footer-val">Morocco · Atlas Mountains</p></div><span class="back-arrow">↗</span></div>
+          <p class="flip-hint-back">TAP TO RETURN</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="flip-card" onclick="this.classList.toggle('flipped')">
+      <div class="flip-inner">
+        <div class="flip-front">
+          <div class="card-photo" style="background:#E4E4E4">
+            <div class="card-photo-placeholder">
+              <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="32" height="32" rx="1" stroke="#1A1714" stroke-width="0.8"/><circle cx="12" cy="14" r="4" stroke="#1A1714" stroke-width="0.7"/><path d="M2 26 L10 18 L18 24 L26 16 L34 22" stroke="#1A1714" stroke-width="0.7" fill="none"/></svg>
+            </div>
+            <span class="card-photo-label">WEST AFRICA · GUINEA SAVANNAH</span>
+          </div>
+          <div class="card-body">
+            <div class="card-toprow"><span class="card-num">[07]</span><span class="card-dot" style="background:#6B4A28"></span></div>
+            <p class="card-name">Termite mound earth</p>
+            <p class="card-latin">Macrotermes terrain · West Africa</p>
+            <p class="card-desc">Architecture built over decades — mineral-rich, structurally dense, warm and dry. The most complex structures on the savannah. A terrain signature that fine perfumery has never considered.</p>
+            
+            <p class="flip-hint">TAP TO LEARN MORE</p>
+          </div>
+        </div>
+        <div class="flip-back">
+          <div class="back-toprow"><div class="back-num-name"><span class="back-num">[07]</span><span class="back-name">Termite mound earth</span></div><span class="back-dot" style="background:#6B4A28"></span></div>
+          <div class="back-section"><p class="back-section-label">The question</p><p class="back-section-text">Who built this continent before we did?</p></div>
+          <div class="back-section"><p class="back-section-label">Terrain material</p><p class="back-section-text">Termite mound earth — mineral-rich, processed through Macrotermes bodies over decades. The most architecturally complex structures on the savannah. A terrain signature that fine perfumery has never considered.</p></div>
+          <div class="back-section"><p class="back-section-label">Smell note</p><p class="back-section-text">First contact: dry, chalky, warm mineral. Broken open: faintly woody, iron-tinged, alive. Memory: a mound at dusk, earth still warm. Emotional register: architecture, patience, deep time.</p></div>
+          <div class="back-footer"><div><p class="back-footer-label">Terrain</p><p class="back-footer-val">West Africa · Guinea savannah</p></div><span class="back-arrow">↗</span></div>
+          <p class="flip-hint-back">TAP TO RETURN</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="flip-card" onclick="this.classList.toggle('flipped')">
+      <div class="flip-inner">
+        <div class="flip-front">
+          <div class="card-photo" style="background:#E4E4E4">
+            <div class="card-photo-placeholder">
+              <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="32" height="32" rx="1" stroke="#1A1714" stroke-width="0.8"/><circle cx="12" cy="14" r="4" stroke="#1A1714" stroke-width="0.7"/><path d="M2 26 L10 18 L18 24 L26 16 L34 22" stroke="#1A1714" stroke-width="0.7" fill="none"/></svg>
+            </div>
+            <span class="card-photo-label">MALI · SAHEL CRAFT TRADITION</span>
+          </div>
+          <div class="card-body">
+            <div class="card-toprow"><span class="card-num">[08]</span><span class="card-dot" style="background:#3A3050"></span></div>
+            <p class="card-name">Indigo fermentation pit</p>
+            <p class="card-latin">Indigofera tinctoria · Mali</p>
+            <p class="card-desc">The fermentation process itself — not the dye. Mali's indigo pits hold a centuries-old bacterial culture. Earthy, sharp, alive. A craft process rendered as fragrance concept.</p>
+            
+            <p class="flip-hint">TAP TO LEARN MORE</p>
+          </div>
+        </div>
+        <div class="flip-back">
+          <div class="back-toprow"><div class="back-num-name"><span class="back-num">[08]</span><span class="back-name">Indigo fermentation pit</span></div><span class="back-dot" style="background:#3A3050"></span></div>
+          <div class="back-section"><p class="back-section-label">The question</p><p class="back-section-text">What does centuries-old knowledge smell like when it's still alive?</p></div>
+          <div class="back-section"><p class="back-section-label">Terrain material</p><p class="back-section-text">Indigo fermentation pit — the living bacterial culture of Mali's dye tradition, maintained across generations. The dye has been studied. The smell of its making has never been considered a material. Until now.</p></div>
+          <div class="back-section"><p class="back-section-label">Smell note</p><p class="back-section-text">First contact: sharp, fermented, green. Active: earthy, slightly acidic, alive. Memory: the back of a dyehouse in morning light. Emotional register: craft, continuity, knowledge that passes through hands.</p></div>
+          <div class="back-footer"><div><p class="back-footer-label">Terrain</p><p class="back-footer-val">Mali · Sahel craft tradition</p></div><span class="back-arrow">↗</span></div>
+          <p class="flip-hint-back">TAP TO RETURN</p>
+        </div>
+      </div>
+    </div>
+
+
+
+  </div>
+</div>
+
+<!-- 7. THE FOUNDER -->
+<div class="founder-statement">
+  <div class="founder-meta">
+    <span class="founder-label">THE FOUNDER</span>
+    <p class="founder-name">Ola</p>
+    <p class="founder-role">London, 2026</p>
+  </div>
+  <div class="founder-break">
+    <p class="founder-break-text">"A perfume house begins long before the first bottle. It begins with a curiosity that cannot be satisfied by anything that already exists."</p>
+    <div class="founder-break-image">
+      <div class="founder-break-placeholder">
+        <svg viewBox="0 0 80 100" fill="none" xmlns="http://www.w3.org/2000/svg"><ellipse cx="40" cy="32" rx="16" ry="18" stroke="#1A1714" stroke-width="0.7"/><path d="M12 90 Q12 62 40 62 Q68 62 68 90" stroke="#1A1714" stroke-width="0.7" fill="none"/></svg>
+      </div>
+    </div>
+  </div>
+  <div class="founder-body">
+    <p>There is a particular kind of obsession that precedes a house. It is not ambition. It is not a market opportunity. It is a sustained, private encounter with materials — their character, their history, their insistence on being understood before they will yield anything of value.</p>
+    <p>House of Terrain began there. In the materials themselves. In the encounter between a rigorous nose and terrain of extraordinary, unrepeatable specificity. The archive — of smell notes, field documents, and locked accords — is not the preparation for the house. It is the house, in its earliest form.</p>
+    <p>The first accords are being built now. Sixteen materials documented. The work is deliberate, unhurried, and intended to last.</p>
+  </div>
+</div>
+
+<!-- 8. THE PRINCIPLES -->
+<div class="pillars">
+  <div class="pillars-header">
+    <span class="section-label">THE PRINCIPLES</span>
+  </div>
+  <div class="pillars-grid">
+    <div class="pillar-card">
+      <div class="pillar-placeholder"><svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 36 Q16 24 24 28 Q32 32 40 20" stroke="#1A1714" stroke-width="1.2" fill="none"/><circle cx="18" cy="30" r="3" stroke="#1A1714" stroke-width="1"/><circle cx="30" cy="26" r="4" stroke="#1A1714" stroke-width="1"/></svg></div>
+      <span class="pillar-label">Rare terrain</span>
+    </div>
+    <div class="pillar-card">
+      <div class="pillar-placeholder"><svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M24 10 Q32 20 32 28 A8 8 0 0 1 16 28 Q16 20 24 10Z" stroke="#1A1714" stroke-width="1.2" fill="none"/><path d="M24 22 Q27 25 27 28" stroke="#1A1714" stroke-width="0.8" opacity="0.5"/></svg></div>
+      <span class="pillar-label">Pure extraction</span>
+    </div>
+    <div class="pillar-card">
+      <div class="pillar-placeholder"><svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="12" y="14" width="24" height="28" rx="2" stroke="#1A1714" stroke-width="1.2"/><line x1="17" y1="22" x2="31" y2="22" stroke="#1A1714" stroke-width="0.9"/><line x1="17" y1="28" x2="31" y2="28" stroke="#1A1714" stroke-width="0.9"/><line x1="17" y1="34" x2="25" y2="34" stroke="#1A1714" stroke-width="0.9"/></svg></div>
+      <span class="pillar-label">Documented archive</span>
+    </div>
+    <div class="pillar-card">
+      <div class="pillar-placeholder"><svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 34 Q14 24 20 20 Q24 18 28 20 Q32 22 32 28 L32 34" stroke="#1A1714" stroke-width="1.2" fill="none"/><path d="M20 20 L20 14 Q20 12 22 12 Q24 12 24 14 L24 22" stroke="#1A1714" stroke-width="1" fill="none"/><path d="M24 20 L24 14 Q24 12 26 12 Q28 12 28 14 L28 22" stroke="#1A1714" stroke-width="1" fill="none"/></svg></div>
+      <span class="pillar-label">Founder-made</span>
+    </div>
+  </div>
+</div>
+
+<!-- 9. BOTTOM CTA -->
+<div class="bottom-cta">
+  <div class="cta-left">
+    <span class="cta-label">THE HOUSE</span>
+    <h2 class="cta-title">Every terrain<br>has a house.<br><em>This one didn't.</em></h2>
+    <p class="cta-body">The perfumery board was built on the materials of a few celebrated regions. Countless other terrains hold materials of equal character — undocumented, unclaimed, unnamed. House of Terrain exists to build that archive properly: one material, one question, one accord at a time.</p>
+  </div>
+  <div class="cta-right">
+    <div class="cta-waitlist">
+      <input type="email" id="e-in2" placeholder="your@email.com">
+      <button onclick="handleW2()">Enter the house</button>
+    </div>
+    <p id="w-msg2"></p>
+  </div>
+</div>
+
+<!-- 10. FOOTER -->
+<footer>
+  <span class="footer-mark">HOUSE OF TERRAIN · LONDON</span>
+  <span class="footer-note">Est. 2026</span>
+</footer>
+
+<script>
+  function handleW1() {
+    const i = document.getElementById('e-in');
+    const m = document.getElementById('w-msg');
+    if (!i.value || !i.value.includes('@')) { m.textContent = 'Enter a valid email.'; return; }
+    m.textContent = 'You are on the list.';
+    m.style.color = 'rgba(242,237,230,0.35)';
+    i.value = '';
+  }
+  function handleW2() {
+    const i = document.getElementById('e-in2');
+    const m = document.getElementById('w-msg2');
+    if (!i.value || !i.value.includes('@')) { m.textContent = 'Enter a valid email address.'; return; }
+    m.textContent = 'You are on the list.';
+    m.style.color = '#A09288';
+    i.value = '';
+  }
+
+  (function(){
+    var nav = document.querySelector('nav');
+    var lastY = window.scrollY;
+    var ticking = false;
+    function onScroll(){
+      var y = window.scrollY;
+      if (y < 40) { nav.classList.remove('nav-hidden'); }
+      else if (y > lastY) { nav.classList.add('nav-hidden'); }
+      else { nav.classList.remove('nav-hidden'); }
+      lastY = y;
+      ticking = false;
+    }
+    window.addEventListener('scroll', function(){
+      if (!ticking) { window.requestAnimationFrame(onScroll); ticking = true; }
+    });
+    var burger = document.querySelector('.nav-burger');
+    var links = document.querySelector('.nav-links');
+    if (burger && links) {
+      burger.addEventListener('click', function(){
+        links.classList.toggle('open');
+        burger.classList.toggle('open');
+      });
+      links.querySelectorAll('a').forEach(function(a){
+        a.addEventListener('click', function(){
+          links.classList.remove('open');
+          burger.classList.remove('open');
+        });
+      });
+    }
+  })();
+
+  (function(){
+    var slides = document.querySelectorAll('.gallery-slide');
+    var thumbs = document.querySelectorAll('.gallery-thumb');
+    if (!slides.length) return;
+    var current = 0;
+    var timer = null;
+    function show(i){
+      current = (i + slides.length) % slides.length;
+      slides.forEach(function(s){ s.classList.toggle('active', +s.dataset.slide === current); });
+      thumbs.forEach(function(t){ t.classList.toggle('active', +t.dataset.slide === current); });
+    }
+    function next(){ show(current + 1); }
+    function prev(){ show(current - 1); }
+    function restart(){
+      if (timer) clearInterval(timer);
+      timer = setInterval(next, 4500);
+    }
+    document.querySelector('.gallery-arrow.next').addEventListener('click', function(){ next(); restart(); });
+    document.querySelector('.gallery-arrow.prev').addEventListener('click', function(){ prev(); restart(); });
+    thumbs.forEach(function(t){
+      t.addEventListener('click', function(){ show(+t.dataset.slide); restart(); });
+    });
+    restart();
+  })();
+</script>
+</body>
+</html>
